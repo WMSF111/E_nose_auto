@@ -6,7 +6,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QFormLayout,
                                QGroupBox, QHBoxLayout, QLabel, QPushButton,
                                QSizePolicy, QSpacerItem, QSplitter, QTabWidget,
                                QTreeWidget, QVBoxLayout, QWidget,
-                               QTextEdit, QFrame, QListWidget, QGridLayout)
+                               QTextEdit, QFrame, QListWidget, QGridLayout,
+                               QProgressBar, QScrollArea)  # 添加 QProgressBar
 
 
 class Ui_Form(object):
@@ -95,6 +96,7 @@ class Ui_Form(object):
         self.verticalLayout_left.addWidget(self.treeWidget)
         self.splitter.addWidget(self.left_widget)
 
+
         # ===== 右侧面板 =====
         self.right_widget = QWidget(self.splitter)
         self.right_widget.setObjectName(u"right_widget")
@@ -102,9 +104,28 @@ class Ui_Form(object):
         self.verticalLayout_right.setObjectName(u"verticalLayout_right")
         self.verticalLayout_right.setContentsMargins(0, 0, 0, 0)
 
-        self.tabWidget = QTabWidget(self.right_widget)
+        # 创建滚动区域
+        self.scroll_area = QScrollArea(self.right_widget)
+        self.scroll_area.setObjectName("scroll_area")
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setContentsMargins(0, 0, 0, 0)
+
+        # 创建tabWidget
+        self.tabWidget = QTabWidget()
         self.tabWidget.setObjectName(u"tabWidget")
         self.tabWidget.setTabsClosable(False)
+        self.tabWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.tabWidget.setMinimumSize(QSize(0, 0))
+
+        # 滚动区域嵌套tabWidget
+        self.scroll_area.setWidget(self.tabWidget)
+        self.verticalLayout_right.addWidget(self.scroll_area)
+
+        # 把右侧面板加入splitter
+        self.splitter.addWidget(self.right_widget)
+        self.verticalLayout_9.addWidget(self.splitter)
 
         # ===== Tab: 数据预处理 =====
         self.tab_process = QWidget()
@@ -197,6 +218,7 @@ class Ui_Form(object):
                 color: #333;
             }
         """)
+
 
         self.formLayout_file_select.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_data_columns)
         self.formLayout_file_select.setWidget(2, QFormLayout.ItemRole.FieldRole, self.listWidget_data_columns)
@@ -486,6 +508,26 @@ class Ui_Form(object):
         self.textEdit_results.setText("结果将显示在这里...")
 
         self.verticalLayout_results.addWidget(self.textEdit_results)
+
+        # ===== 添加进度条（在文本框和按钮区域之间）=====
+        # 创建水平布局容器来放置进度条，使其占满一行
+        self.horizontalLayout_progress = QHBoxLayout()
+        self.horizontalLayout_progress.setObjectName(u"horizontalLayout_progress")
+        self.horizontalLayout_progress.setContentsMargins(0, 5, 0, 5)
+
+        self.progressBar = QProgressBar(self.groupBox_results)
+        self.progressBar.setObjectName(u"progressBar")
+        self.progressBar.setMinimumSize(QSize(0, 20))
+        self.progressBar.setMaximumSize(QSize(16777215, 20))
+        self.progressBar.setMaximum(0)
+        self.progressBar.setValue(-1)
+        self.progressBar.setVisible(False)
+
+        # 设置进度条占满水平布局
+        self.progressBar.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+
+        self.horizontalLayout_progress.addWidget(self.progressBar)
+        self.verticalLayout_results.addLayout(self.horizontalLayout_progress)
 
         # ===== 新的操作按钮区域 =====
         self.horizontalLayout_results_buttons = QHBoxLayout()

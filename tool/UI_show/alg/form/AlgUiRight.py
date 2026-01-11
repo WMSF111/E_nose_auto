@@ -20,6 +20,7 @@ from tool.UI_show.alg.Zoom import ZoomableLabel
 class RightFrameManager:
     def __init__(self, ui_instance):
         """初始化右侧Tab管理器"""
+        self.worker = None
         self.ui = ui_instance
 
         # 初始化变量
@@ -790,9 +791,14 @@ class RightFrameManager:
         self.ui.comboBox_image_selector.clear()
         self.ui.comboBox_image_selector.addItem("--请选择--")
 
+        self.ui.progressBar.setVisible(True)
+
         in_param = {}
         in_param["params"] = params
         in_param["image_param"] = image_param_json
+        if self.worker is not None and self.worker.isRunning():
+            QMessageBox.warning(self.ui, "警告", "存在正在执行的计算任务，请等待...")
+            return
 
         self.worker = AlgModelWorker.ModelWorker(work_path, selected_file, model_type, model_name, in_param, dpi)
         self.ui.tabWidget.setCurrentIndex(2)
@@ -801,6 +807,7 @@ class RightFrameManager:
         self.worker.start()
 
     def on_calculate_work_finished(self, result):
+        self.ui.progressBar.setVisible(False)
         print("结果展示-------\n")
         print(result)
         result_json = json.loads(result)
@@ -827,10 +834,12 @@ class RightFrameManager:
                 self.tab_counters[img["name"]] = 0
 
         self.ui.comboBox_image_selector.addItems(_img_names)
+        self.worker.stop()
 
         # self.ui.left_manager.refresh_directory(self.ui.left_manager.get_data_directory_path())
 
     def on_calculate_work_error(self, error_msg):
+        self.ui.progressBar.setVisible(False)
         self.ui.textEdit_results.setText(error_msg)
         self.ui.comboBox_image_selector.setEnabled(False)
         self.ui.comboBox_image_selector.setStyleSheet("background-color: grey;")
@@ -840,6 +849,7 @@ class RightFrameManager:
         self.ui.btn_save_feature_importance.setStyleSheet("background-color: grey;")
         self.ui.btn_save_model_info.setEnabled(False)
         self.ui.btn_save_model_info.setStyleSheet("background-color: grey;")
+        self.worker.stop()
 
     def close_tab(self, tab_id):
         """关闭指定的Tab页"""

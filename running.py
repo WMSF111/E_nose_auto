@@ -216,6 +216,30 @@ class MainWindow(QMainWindow):
 def main():
     """应用程序主函数"""
     app = QApplication(sys.argv)
+    # 步骤1：设置Fusion样式（核心，避免系统原生样式干扰）
+    app.setStyle("Fusion")
+
+    # 步骤2：构建浅色主题的固定调色板
+    light_palette = QPalette()
+    # 核心配色：模拟系统浅色主题默认值
+    light_palette.setColor(QPalette.Window, QColor(240, 240, 240))  # 窗口背景（浅灰）
+    light_palette.setColor(QPalette.WindowText, QColor(0, 0, 0))  # 窗口文字（黑色）
+    light_palette.setColor(QPalette.Base, QColor(255, 255, 255))  # 输入框/编辑区背景（白色）
+    light_palette.setColor(QPalette.AlternateBase, QColor(245, 245, 245))  # 交替行背景（浅灰）
+    light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))  # 提示框背景（白色）
+    light_palette.setColor(QPalette.ToolTipText, QColor(0, 0, 0))  # 提示框文字（黑色）
+    light_palette.setColor(QPalette.Text, QColor(0, 0, 0))  # 普通文字（黑色）
+    light_palette.setColor(QPalette.Button, QColor(240, 240, 240))  # 按钮背景（浅灰）
+    light_palette.setColor(QPalette.ButtonText, QColor(0, 0, 0))  # 按钮文字（黑色）
+    light_palette.setColor(QPalette.BrightText, QColor(255, 255, 255))  # 高亮文字（白色）
+    light_palette.setColor(QPalette.Highlight, QColor(66, 133, 244))  # 选中高亮（谷歌蓝，系统浅色默认）
+    light_palette.setColor(QPalette.HighlightedText, QColor(255, 255, 255))  # 高亮文字（白色）
+
+    # 步骤3：全局应用浅色调色板
+    app.setPalette(light_palette)
+
+    # 步骤4：强制设置color-scheme为light（Qt 5.15+支持，强化浅色优先级）
+    app.setStyleSheet("QApplication { color-scheme: light; }")
     icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))
