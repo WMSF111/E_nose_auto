@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1077</width>
+    <height>706</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="minimumSize">
+    <size>
+     <width>1077</width>
+     <height>630</height>
+    </size>
+   </property>
+   <property name="layoutDirection">
+    <enum>Qt::LayoutDirection::LeftToRight</enum>
+   </property>
+   <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,4">
+    <item>
+     <widget class="QTreeWidget" name="treeWidget">
+      <column>
+       <property name="text">
+        <string>实验</string>
+       </property>
+      </column>
+      <item>
+       <property name="text">
+        <string>传感器设置</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>测试阶段</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>模型计算</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>大模型分析</string>
+       </property>
+      </item>
+     </widget>
+    </item>
+    <item>
+     <widget class="QWidget" name="show_widget" native="true">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <item row="0" column="0">
+        <layout class="QGridLayout" name="show_Layout"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="Open_action">
+   <property name="icon">
+    <iconset resource="../images/icon.qrc">
+     <normaloff>:/文件/打开.png</normaloff>:/文件/打开.png</iconset>
+   </property>
+   <property name="text">
+    <string>打开</string>
+   </property>
+  </action>
+  <action name="Newfile_action">
+   <property name="icon">
+    <iconset resource="../images/icon.qrc">
+     <normaloff>:/文件/新建.png</normaloff>:/文件/新建.png</iconset>
+   </property>
+   <property name="text">
+    <string>新建</string>
+   </property>
+  </action>
+  <action name="action">
+   <property name="text">
+    <string>传感器设置</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="../images/icon.qrc"/>
+ </resources>
+ <connections/>
+</ui>
