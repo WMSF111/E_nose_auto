@@ -229,7 +229,7 @@ def main():
     light_palette.setColor(QPalette.ToolTipBase, QColor(255, 255, 255))  # 提示框背景（白色）
     light_palette.setColor(QPalette.ToolTipText, QColor(0, 0, 0))  # 提示框文字（黑色）
     light_palette.setColor(QPalette.Text, QColor(0, 0, 0))  # 普通文字（黑色）
-    light_palette.setColor(QPalette.Button, QColor(240, 240, 240))  # 按钮背景（浅灰）
+    light_palette.setColor(QPalette.Button, QColor(236, 248, 248))  # 按钮背景（浅蓝）
     light_palette.setColor(QPalette.ButtonText, QColor(0, 0, 0))  # 按钮文字（黑色）
     light_palette.setColor(QPalette.BrightText, QColor(255, 255, 255))  # 高亮文字（白色）
     light_palette.setColor(QPalette.Highlight, QColor(66, 133, 244))  # 选中高亮（谷歌蓝，系统浅色默认）
