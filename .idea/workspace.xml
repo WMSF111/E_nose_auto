@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/py_dracula_light.qss" beforeDir="false" afterPath="$PROJECT_DIR$/py_dracula_light.qss" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/running.py" beforeDir="false" afterPath="$PROJECT_DIR$/running.py" afterDir="false" />
-    </list>
+    <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
