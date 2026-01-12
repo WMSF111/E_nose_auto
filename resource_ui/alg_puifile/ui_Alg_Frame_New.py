@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QComboBox, QFormLayout,
                                QSizePolicy, QSpacerItem, QSplitter, QTabWidget,
                                QTreeWidget, QVBoxLayout, QWidget,
                                QTextEdit, QFrame, QListWidget, QGridLayout,
-                               QProgressBar, QScrollArea)  # 添加 QProgressBar 和 QScrollArea
+                               QProgressBar, QScrollArea)  # 添加 QProgressBar
 
 
 class Ui_Form(object):
@@ -96,6 +96,7 @@ class Ui_Form(object):
         self.verticalLayout_left.addWidget(self.treeWidget)
         self.splitter.addWidget(self.left_widget)
 
+
         # ===== 右侧面板 =====
         self.right_widget = QWidget(self.splitter)
         self.right_widget.setObjectName(u"right_widget")
@@ -103,9 +104,6 @@ class Ui_Form(object):
         self.verticalLayout_right.setObjectName(u"verticalLayout_right")
         self.verticalLayout_right.setContentsMargins(0, 0, 0, 0)
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
         # 创建滚动区域
         self.scroll_area = QScrollArea(self.right_widget)
         self.scroll_area.setObjectName("scroll_area")
@@ -114,18 +112,12 @@ class Ui_Form(object):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setContentsMargins(0, 0, 0, 0)
 
->>>>>>> parent of 74982bb (最终版)
         # 创建tabWidget
         self.tabWidget = QTabWidget()
         self.tabWidget.setObjectName(u"tabWidget")
         self.tabWidget.setTabsClosable(False)
         self.tabWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.tabWidget.setMinimumSize(QSize(0, 0))
-=======
-        self.tabWidget = QTabWidget(self.right_widget)
-        self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setTabsClosable(False)
->>>>>>> 954cd1191aee3c61d370d5aaec6cf1a0f2a72684
 
         # 滚动区域嵌套tabWidget
         self.scroll_area.setWidget(self.tabWidget)
@@ -226,6 +218,7 @@ class Ui_Form(object):
                 color: #333;
             }
         """)
+
 
         self.formLayout_file_select.setWidget(2, QFormLayout.ItemRole.LabelRole, self.label_data_columns)
         self.formLayout_file_select.setWidget(2, QFormLayout.ItemRole.FieldRole, self.listWidget_data_columns)
@@ -375,73 +368,29 @@ class Ui_Form(object):
         self.formLayout_model.setWidget(1, QFormLayout.ItemRole.LabelRole, self.label_model)
         self.formLayout_model.setWidget(1, QFormLayout.ItemRole.FieldRole, self.comboBox_model)
 
-        # 参数设置GroupBox - 修改为固定高度和滚动支持
+        # 参数设置GroupBox
         self.groupBox_params = QGroupBox(self.groupBox_model)
         self.groupBox_params.setObjectName(u"groupBox_params")
         self.groupBox_params.setTitle("参数设置")
 
-        # 设置固定高度
-        self.groupBox_params.setMinimumHeight(300)
-        self.groupBox_params.setMaximumHeight(400)
-
         self.verticalLayout_params = QVBoxLayout(self.groupBox_params)
         self.verticalLayout_params.setObjectName(u"verticalLayout_params")
-        self.verticalLayout_params.setContentsMargins(0, 0, 0, 0)
-
-        # 创建滚动区域
-        self.scrollArea_params = QScrollArea(self.groupBox_params)
-        self.scrollArea_params.setObjectName(u"scrollArea_params")
-        self.scrollArea_params.setWidgetResizable(True)
-        self.scrollArea_params.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scrollArea_params.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-
-        # 创建滚动区域的内容部件
-        self.scrollContentWidget = QWidget()
-        self.scrollContentWidget.setObjectName(u"scrollContentWidget")
-
-        # 创建滚动区域的布局
-        self.verticalLayout_scroll_content = QVBoxLayout(self.scrollContentWidget)
-        self.verticalLayout_scroll_content.setObjectName(u"verticalLayout_scroll_content")
-        self.verticalLayout_scroll_content.setContentsMargins(10, 10, 10, 10)
+        self.verticalLayout_params.setContentsMargins(10, 10, 10, 10)
 
         # 用于动态显示参数的网格布局
         self.gridLayout_params = QGridLayout()
         self.gridLayout_params.setObjectName(u"gridLayout_params")
         self.gridLayout_params.setHorizontalSpacing(15)
         self.gridLayout_params.setVerticalSpacing(10)
-        self.gridLayout_params.setColumnStretch(1, 1)  # 第二列可拉伸
 
         # 初始占位标签
-        self.label_params = QLabel(self.scrollContentWidget)
+        self.label_params = QLabel(self.groupBox_params)
         self.label_params.setObjectName(u"label_params")
         self.label_params.setText("请先选择具体模型以显示参数设置")
         self.label_params.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_params.setMinimumHeight(150)  # 设置最小高度
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        # ================ ✅✅✅ 调整布局嵌套关系（仅此2处小改，适配滚动）✅✅✅ ================
-        self.scroll_content_layout.addWidget(self.label_params)
-        self.scroll_content_layout.addLayout(self.gridLayout_params)
-        self.scroll_params.setWidget(self.scroll_content)
-        self.verticalLayout_params.addWidget(self.scroll_params)
-=======
-        # 将标签添加到网格布局
-        self.gridLayout_params.addWidget(self.label_params, 0, 0, 1, 2)
-
-        # 将网格布局添加到滚动内容布局
-        self.verticalLayout_scroll_content.addLayout(self.gridLayout_params)
-
-        # 设置滚动区域的内容部件
-        self.scrollArea_params.setWidget(self.scrollContentWidget)
-
-        # 将滚动区域添加到垂直布局
-        self.verticalLayout_params.addWidget(self.scrollArea_params)
->>>>>>> 954cd1191aee3c61d370d5aaec6cf1a0f2a72684
-=======
         self.verticalLayout_params.addWidget(self.label_params)
         self.verticalLayout_params.addLayout(self.gridLayout_params)
->>>>>>> parent of 74982bb (最终版)
 
         self.formLayout_model.setWidget(2, QFormLayout.ItemRole.SpanningRole, self.groupBox_params)
 

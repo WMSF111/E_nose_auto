@@ -115,7 +115,7 @@ class RightFrameManager:
 
     def create_param_form(self, parameters):
         """根据参数定义创建表单"""
-        # self.ui.label_params.setVisible(False)
+        self.ui.label_params.setVisible(False)
         row = 0
         for param in parameters:
             label_txt = param["label"]
@@ -176,12 +176,11 @@ class RightFrameManager:
             widget.setMinimumWidth(200)
 
         widget.setToolTip(param["tip"])
-        widget.setMinimumHeight(35)
         return widget
 
     def clear_param_form(self):
         """清除参数设置区域的所有动态控件"""
-        # self.ui.label_params.setVisible(False)
+        self.ui.label_params.setVisible(False)
         for i in reversed(range(self.ui.gridLayout_params.count())):
             widget = self.ui.gridLayout_params.itemAt(i).widget()
             if widget:
