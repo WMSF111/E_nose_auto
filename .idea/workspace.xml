@@ -1,82 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="AutoImportSettings">
-    <option name="autoReloadType" value="SELECTIVE" />
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Enose.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/auto_Enose.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/running.py" beforeDir="false" afterPath="$PROJECT_DIR$/running.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/running.spec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tool/UI_show/alg/AlgModelWorker.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/alg/AlgModelWorker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tool/UI_show/alg/form/AlgUiRight.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/alg/form/AlgUiRight.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/背景颜色.xlsx" beforeDir="false" />
-    </list>
+    <list default="true" id="aae70a0c-3ef5-4831-8d21-686658cb77f4" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
-  <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
-  </component>
-  <component name="GitHubPullRequestSearchHistory">{
-  &quot;lastFilter&quot;: {
-    &quot;state&quot;: &quot;OPEN&quot;,
-    &quot;assignee&quot;: &quot;WMSF111&quot;
-  }
-}</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/WMSF111/E_nose_auto.git&quot;,
-    &quot;accountId&quot;: &quot;9801498e-c2d3-4ddc-bd73-47fbd8915e60&quot;
-  }
-}</component>
-  <component name="ProjectColorInfo">{
-  &quot;associatedIndex&quot;: 6
-}</component>
-  <component name="ProjectId" id="387AFFyphwqjaSBkAxZWI5ftL8m" />
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 4
+}]]></component>
+  <component name="ProjectId" id="389CaoEmOo9Zj29zEaoMK4RofgM" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Python.AlgUi.executor": "Run",
-    "Python.running.executor": "Run",
-    "Python.ui_Alg_Frame_New.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "E:/study/Python/PyCharm_study/auto_Enose(2)"
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-975db3bf15a3-31b6be0877a2-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-241.18034.82" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.29346.142" />
+        <option value="bundled-python-sdk-f2b7a9f6281b-6e1f45a539f7-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.29346.142" />
       </set>
     </attachedChunks>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="应用程序级" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="默认任务">
-      <changelist id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="" />
-      <created>1768140129821</created>
+      <changelist id="aae70a0c-3ef5-4831-8d21-686658cb77f4" name="更改" comment="" />
+      <created>1768202474386</created>
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
-      <updated>1768140129821</updated>
+      <updated>1768202474386</updated>
+      <workItem from="1768202476541" duration="1698000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
 </project>
