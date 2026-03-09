@@ -113,7 +113,7 @@ class ADDTAB():
         # 将 QAction 添加到新 Tab 的上下文菜单
         new_tab.addAction(save_action)
 
-    def save_text(text):
+    def save_text(text, file_path = ' '):
         """保存当前文本"""
         # 确保text是DataFrame
         if isinstance(text, str):  # 如果传入的是字符串，尝试转回DataFrame
@@ -122,7 +122,7 @@ class ADDTAB():
         filter_options = "TXT Files (*.txt);;CSV Files (*.csv);;Excel Files (*.xlsx);;All Files (*)"
 
         # 打开保存文件对话框，用户选择文件类型
-        file_path, selected_filter = QFileDialog.getSaveFileName(None, "Save result", global_var.folder_path,
+        file_path, selected_filter = QFileDialog.getSaveFileName(None, "Save result", file_path,
                                                                  filter_options)
 
         if file_path:
@@ -133,6 +133,13 @@ class ADDTAB():
                 file_path += ".txt"
             elif selected_filter == "Excel Files (*.xlsx)" and not file_path.endswith('.xlsx'):
                 file_path += ".xlsx"
+
+            # 提取文件名（不包含路径和扩展名）
+            file_name = os.path.basename(file_path)
+            file_name_without_ext = os.path.splitext(file_name)[0]
+
+            # 在DataFrame第一列添加type列，值为文件名
+            text.insert(0, 'type', file_name_without_ext)
 
             # 根据文件类型保存
             if selected_filter == "Excel Files (*.xlsx)":

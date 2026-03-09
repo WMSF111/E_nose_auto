@@ -143,6 +143,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.InitPos_Button.clicked.connect(self.Stra) #初始化位置
         self.Folder_Button.clicked.connect(self.savefolder) # 确认保存路径
         self.Stop_Button.clicked.connect(self.Stop)  # 全部暂停
+        self.Save_Button.clicked.connect(self.savefile) #保存文件
         if g_var.Auto_falg == True:
             self.Autochoose_Button.clicked.connect(self.Autoinsample)  # 自动进样器
 
@@ -410,25 +411,21 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             transposed_data = list(map(list, zip(*selected_data)))
             # 假设 selected_data 是一个包含多个传感器数据的二维列表或数组
             selected_data_df = pd.DataFrame(transposed_data, columns=self._data_visible)  # 将数据转换为 DataFrame
-            if self.Folder_lineEdit.text() == "":
-                Tab_add.ADDTAB.save_text(selected_data_df)
-            else:
-                # 获取当前时间
-                current_time = datetime.now()
-                base_filename = current_time.strftime("%Y_%m_%d")  # 格式化为 YYYY_MM_DD
+            # 获取当前时间
+            current_time = datetime.now()
+            base_filename = current_time.strftime("%Y_%m_%d")  # 格式化为 YYYY_MM_DD
+            file_path = os.path.join(self.Folder_lineEdit.text(), f"{base_filename}_{self.file_count}.txt")
+            # 检查文件是否存在，并增加计数器
+            while os.path.exists(file_path):
+                self.file_count += 1
                 file_path = os.path.join(self.Folder_lineEdit.text(), f"{base_filename}_{self.file_count}.txt")
-
-                # 检查文件是否存在，并增加计数器
-                while os.path.exists(file_path):
-                    self.file_count += 1
-                    file_path = os.path.join(self.Folder_lineEdit.text(), f"{base_filename}_{self.file_count}.txt")
-
+                Tab_add.ADDTAB.save_text(selected_data_df, file_path)
                 # 将 DataFrame 转换为文本字符串
-                text_str = selected_data_df.to_csv(index=False, sep=' ')
-                with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(text_str)  # 保存为 TXT 文件
-
-                print(f"Text file saved to {file_path}")
+                # text_str = selected_data_df.to_csv(index=False, sep=' ')
+                # with open(file_path, "w", encoding="utf-8") as f:
+                #     f.write(text_str)  # 保存为 TXT 文件
+                #
+                # print(f"Text file saved to {file_path}")
 
         except Exception as e:
             print("保存失败: " + str(e))

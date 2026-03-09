@@ -140,19 +140,7 @@ class Ui_Form(object):
         self.formLayout_file_select.setLabelAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.formLayout_file_select.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
 
-        # 文件类型选择
-        self.label_file_type = QLabel(self.groupBox_file_select)
-        self.label_file_type.setObjectName(u"label_file_type")
-        self.label_file_type.setText("文件类型:")
 
-        self.comboBox_file_type = QComboBox(self.groupBox_file_select)
-        self.comboBox_file_type.setObjectName(u"comboBox_file_type")
-        self.comboBox_file_type.addItems(["TXT", "CSV"])
-        # 设置下拉框占满可用宽度
-        self.comboBox_file_type.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-
-        self.formLayout_file_select.setWidget(0, QFormLayout.ItemRole.LabelRole, self.label_file_type)
-        self.formLayout_file_select.setWidget(0, QFormLayout.ItemRole.FieldRole, self.comboBox_file_type)
 
         # 指定target
         self.label_target = QLabel(self.groupBox_file_select)

@@ -41,7 +41,17 @@ class ModelWorker(QThread):
         if not self._is_running:
             self._is_running = True
             try:
-                df = pd.read_csv(self.src_path)         # 读取数据文件
+                # 根据文件扩展名选择合适的读取方式
+                file_ext = os.path.splitext(self.src_path)[1].lower()
+                if file_ext == '.txt':
+                    # 读取txt文件，使用空格分隔
+                    df = pd.read_csv(self.src_path, sep='\s+')
+                elif file_ext == '.csv':
+                    # 读取csv文件，使用逗号分隔
+                    df = pd.read_csv(self.src_path)
+                else:
+                    # 对于其他文件类型，尝试使用空格分隔读取
+                    df = pd.read_csv(self.src_path, sep='\s+')
                 result = {}                             # 算法结果
 
                 if self.group_name == "分类模型":

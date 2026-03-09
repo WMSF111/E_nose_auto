@@ -291,11 +291,24 @@
                 </size>
                </property>
                <property name="text">
-                <string>开始/初始化</string>
+                <string>初始化</string>
                </property>
               </widget>
              </item>
             </layout>
+           </item>
+           <item>
+            <widget class="QPushButton" name="Save_Button">
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>32</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>保存数据（Ctrl+S)</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

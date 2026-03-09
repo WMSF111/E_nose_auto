@@ -37,6 +37,11 @@ class RightFrameManager:
         # 连接信号与槽
         self.setup_connections()
 
+        # 初始化时启用识别文件按钮和相关控件
+        self.ui.comboBox_target.setEnabled(True)
+        self.ui.listWidget_data_columns.setEnabled(True)
+        self.ui.btn_identify_csv.setEnabled(True)
+
         # 初始化预处理相关变量
         self.preprocess_thread = None
         self.preprocess_worker = None
@@ -45,10 +50,9 @@ class RightFrameManager:
         """设置信号与槽的连接"""
         # 连接Tab切换事件
         self.ui.tabWidget.currentChanged.connect(self.on_tab_changed)
-        # 连接数据合并文件类型变化事件
-        self.ui.comboBox_file_type.currentTextChanged.connect(self.on_file_type_changed)
-        # 识别CSV文件
-        self.ui.btn_identify_csv.clicked.connect(self.on_identify_csv)
+        # 识别文件
+        self.ui.btn_identify_csv.setText("识别文件")
+        self.ui.btn_identify_csv.clicked.connect(self.on_identify_file)
         # 数据预处理槽函数
         self.ui.btn_preprocess.clicked.connect(self.on_btn_preprocess_clicked)
         # 数据合并
@@ -205,44 +209,38 @@ class RightFrameManager:
                 QMessageBox.warning(self.ui, "警告", "请先导入文件夹并设置数据计算目录")
                 return
 
-            # 3. 获取文件类型
-            file_type = self.ui.comboBox_file_type.currentText()
-
-            # 4. 验证文件类型与选中文件的一致性
-            if file_type == "TXT":
-                # 检查是否都是TXT文件
-                for file in selected_files:
-                    if not file.lower().endswith('.txt'):
-                        QMessageBox.warning(self.ui, "警告",
-                                            f"文件 '{os.path.basename(file)}' 不是TXT文件\n请确保所有选中文件都是TXT格式")
-                        return
-
-                target_col = None
-                data_columns = []
-
-            else:  # CSV
-                # 检查是否都是CSV文件
-                for file in selected_files:
-                    if not file.lower().endswith('.csv'):
-                        QMessageBox.warning(self.ui, "警告",
-                                            f"文件 '{os.path.basename(file)}' 不是CSV文件\n请确保所有选中文件都是CSV格式")
-                        return
-
-                # 获取target列
-                target_col = self.ui.comboBox_target.currentText()
-                if target_col == "--请选择--":
-                    target_col = None
-
-                # 获取选中的数据列
-                data_columns = []
-                for i in range(self.ui.listWidget_data_columns.count()):
-                    item = self.ui.listWidget_data_columns.item(i)
-                    if item.checkState() == Qt.CheckState.Checked:
-                        data_columns.append(item.text())
-
-                if not data_columns:
-                    QMessageBox.warning(self.ui, "警告", "请至少选择一个数据列")
+            # 3. 自动识别文件类型
+            file_extensions = set()
+            for file in selected_files:
+                ext = os.path.splitext(file)[1].lower()
+                if ext not in ['.txt', '.csv']:
+                    QMessageBox.warning(self.ui, "警告",
+                                        f"文件 '{os.path.basename(file)}' 不是支持的文件类型\n请确保所有选中文件都是TXT或CSV格式")
                     return
+                file_extensions.add(ext)
+
+            if len(file_extensions) > 1:
+                QMessageBox.warning(self.ui, "警告", "请选择相同类型的文件（全部是TXT或全部是CSV）")
+                return
+
+            # 4. 确定文件类型
+            file_type = "TXT" if '.txt' in file_extensions else "CSV"
+
+            # 5. 获取target列和数据列
+            target_col = self.ui.comboBox_target.currentText()
+            if target_col == "--请选择--":
+                target_col = None
+
+            # 获取选中的数据列
+            data_columns = []
+            for i in range(self.ui.listWidget_data_columns.count()):
+                item = self.ui.listWidget_data_columns.item(i)
+                if item.checkState() == Qt.CheckState.Checked:
+                    data_columns.append(item.text())
+
+            if not data_columns:
+                QMessageBox.warning(self.ui, "警告", "请至少选择一个数据列")
+                return
 
             # 5. 获取预处理函数选择
             filter_func = self.ui.comboBox_filter.currentText()
@@ -346,69 +344,57 @@ class RightFrameManager:
         self.preprocess_thread = None
         self.preprocess_worker = None
 
-    def on_file_type_changed(self, file_type):
-        """文件类型选择变化事件"""
-        if file_type == "CSV":
-            # 启用指定target、数据列和识别CSV文件按钮
-            self.ui.comboBox_target.setEnabled(True)
-            self.ui.listWidget_data_columns.setEnabled(True)
-            self.ui.btn_identify_csv.setEnabled(True)
-            self.ui.bottom_manager.update_status("已选择CSV文件类型，请点击'识别CSV文件'按钮")
-        elif file_type == "TXT":
-            # 禁用指定target、数据列和识别CSV文件按钮
-            self.ui.comboBox_target.setEnabled(False)
-            self.ui.listWidget_data_columns.setEnabled(False)
-            self.ui.btn_identify_csv.setEnabled(False)
 
-            # 清空相关控件
-            self.ui.comboBox_target.clear()
-            self.ui.comboBox_target.addItem("--请选择--")
-            self.ui.listWidget_data_columns.clear()
 
-            self.ui.bottom_manager.update_status("已选择TXT文件类型")
-        else:
-            # 默认禁用
-            self.ui.comboBox_target.setEnabled(False)
-            self.ui.listWidget_data_columns.setEnabled(False)
-            self.ui.btn_identify_csv.setEnabled(False)
-            self.ui.bottom_manager.update_status("请选择文件类型")
-
-    def on_identify_csv(self):
-        """识别CSV文件按钮点击事件"""
+    def on_identify_file(self):
+        """识别文件按钮点击事件"""
         selected_files = self.ui.left_manager.get_selected_files()
 
         if not selected_files:
-            QMessageBox.warning(self.ui, "警告", "请先在左侧选择要处理的CSV文件！")
+            QMessageBox.warning(self.ui, "警告", "请先在左侧选择要处理的文件！")
             return
 
-        csv_files = [f for f in selected_files if f.lower().endswith('.csv')]
+        # 过滤出txt和csv文件
+        data_files = [f for f in selected_files if f.lower().endswith(('.txt', '.csv'))]
 
-        if not csv_files:
-            QMessageBox.warning(self.ui, "警告", "选中的文件中没有CSV文件！")
+        if not data_files:
+            QMessageBox.warning(self.ui, "警告", "选中的文件中没有txt或csv文件！")
             return
 
         try:
-            # 读取第一个CSV文件的列信息
-            first_file = csv_files[0]
+            # 读取第一个文件的列信息
+            first_file = data_files[0]
+            file_ext = os.path.splitext(first_file)[1].lower()
             import pandas as pd
-            df = pd.read_csv(first_file)
+            
+            if file_ext == '.txt':
+                # 读取txt文件，使用空格分隔
+                df = pd.read_csv(first_file, sep='\s+')
+            else:  # csv
+                # 读取csv文件，使用逗号分隔
+                df = pd.read_csv(first_file)
 
             column_names = df.columns.tolist()
 
             consistent = True
-            for csv_file in csv_files[1:]:
+            for data_file in data_files[1:]:
                 try:
-                    other_df = pd.read_csv(csv_file)
+                    file_ext = os.path.splitext(data_file)[1].lower()
+                    if file_ext == '.txt':
+                        other_df = pd.read_csv(data_file, sep='\s+')
+                    else:
+                        other_df = pd.read_csv(data_file)
+                        
                     if other_df.columns.tolist() != column_names:
                         consistent = False
                         QMessageBox.warning(self.ui, "警告",
-                                            f"文件结构不一致！\n{first_file} 与 {csv_file} 的列结构不同。")
+                                            f"文件结构不一致！\n{first_file} 与 {data_file} 的列结构不同。")
                         self.ui.comboBox_target.clear()
                         self.ui.comboBox_target.addItem("--请选择--")
                         self.ui.listWidget_data_columns.clear()
                         break
                 except Exception as e:
-                    QMessageBox.warning(self.ui, "警告", f"读取文件 {csv_file} 时出错: {str(e)}")
+                    QMessageBox.warning(self.ui, "警告", f"读取文件 {data_file} 时出错: {str(e)}")
                     return
 
             if consistent:
@@ -426,18 +412,18 @@ class RightFrameManager:
                     self.ui.listWidget_data_columns.addItem(item)
 
                 # 更新状态栏和结果文本框
-                file_count = len(csv_files)
+                file_count = len(data_files)
                 column_count = len(column_names)
 
-                self.ui.bottom_manager.update_status(f"已识别 {file_count} 个CSV文件，共 {column_count} 列")
+                self.ui.bottom_manager.update_status(f"已识别 {file_count} 个文件，共 {column_count} 列")
 
                 # 在结果文本框中显示识别结果
-                csv_files_info = "\n".join([f"  - {os.path.basename(f)}" for f in csv_files])
+                files_info = "\n".join([f"  - {os.path.basename(f)}" for f in data_files])
 
                 self.ui.textEdit_results.setPlainText(
-                    f"CSV文件识别结果:\n"
+                    f"文件识别结果:\n"
                     f"已识别文件数: {file_count}\n"
-                    f"文件列表:\n{csv_files_info}\n\n"
+                    f"文件列表:\n{files_info}\n\n"
                     f"列信息（共 {column_count} 列）:\n"
                     f"{', '.join(column_names)}\n\n"
                     f"请在'指定target'下拉框中选择目标列，"
@@ -446,15 +432,15 @@ class RightFrameManager:
 
                 # 打印到控制台
                 print("=" * 50)
-                print(f"识别到 {file_count} 个CSV文件:")
-                for i, file_path in enumerate(csv_files, 1):
+                print(f"识别到 {file_count} 个文件:")
+                for i, file_path in enumerate(data_files, 1):
                     print(f"  文件{i}: {os.path.basename(file_path)} (路径: {file_path})")
                 print(f"列结构: {column_names}")
                 print("=" * 50)
 
         except Exception as e:
-            QMessageBox.critical(None, "错误", f"识别CSV文件时出错:\n{str(e)}")
-            self.ui.bottom_manager.update_status("CSV文件识别失败")
+            QMessageBox.critical(None, "错误", f"识别文件时出错:\n{str(e)}")
+            self.ui.bottom_manager.update_status("文件识别失败")
 
     def on_merge(self):
         """数据合并按钮点击事件"""
@@ -464,21 +450,22 @@ class RightFrameManager:
                 QMessageBox.warning(self.ui, "警告", "请先选择要合并的文件！")
                 return
 
-            file_type = self.ui.comboBox_file_type.currentText()
-            if file_type == "--请选择--" or not file_type:
-                QMessageBox.warning(self.ui, "警告", "请在文件类型设置中选择文件类型！")
+            # 自动识别文件类型
+            file_extensions = set()
+            for file in selected_files:
+                ext = os.path.splitext(file)[1].lower()
+                if ext not in ['.txt', '.csv']:
+                    QMessageBox.warning(self.ui, "警告",
+                                        f"文件 '{os.path.basename(file)}' 不是支持的文件类型\n请确保所有选中文件都是TXT或CSV格式")
+                    return
+                file_extensions.add(ext)
+
+            if len(file_extensions) > 1:
+                QMessageBox.warning(self.ui, "警告", "请选择相同类型的文件（全部是TXT或全部是CSV）")
                 return
 
-            for file_path in selected_files:
-                ext = os.path.splitext(file_path)[1].lower()
-                if file_type == "TXT" and ext != '.txt':
-                    QMessageBox.warning(self.ui, "警告",
-                                        f"选择的文件类型为TXT，但文件 '{os.path.basename(file_path)}' 不是TXT格式！")
-                    return
-                elif file_type == "CSV" and ext != '.csv':
-                    QMessageBox.warning(self.ui, "警告",
-                                        f"选择的文件类型为CSV，但文件 '{os.path.basename(file_path)}' 不是CSV格式！")
-                    return
+            # 确定文件类型
+            file_type = "TXT" if '.txt' in file_extensions else "CSV"
 
             data_dir = self.ui.left_manager.get_data_directory_path()
             if not data_dir or not os.path.exists(data_dir):

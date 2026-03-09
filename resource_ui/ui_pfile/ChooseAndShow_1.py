@@ -197,6 +197,12 @@ class Ui_Gragh_show(object):
 
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
+        self.Save_Button = QPushButton(self.groupBox_3)
+        self.Save_Button.setObjectName(u"Save_Button")
+        self.Save_Button.setMaximumSize(QSize(300, 32))
+
+        self.verticalLayout_2.addWidget(self.Save_Button)
+
 
         self.verticalLayout.addWidget(self.groupBox_3)
 
@@ -313,7 +319,8 @@ class Ui_Gragh_show(object):
         self.label_14.setText(QCoreApplication.translate("Gragh_show", u"\u5de5\u4f5c:", None))
         self.label_38.setText(QCoreApplication.translate("Gragh_show", u"s", None))
         self.Auto_Button.setText(QCoreApplication.translate("Gragh_show", u"\u81ea\u52a8\u6a21\u5f0f", None))
-        self.InitPos_Button.setText(QCoreApplication.translate("Gragh_show", u"\u5f00\u59cb/\u521d\u59cb\u5316", None))
+        self.InitPos_Button.setText(QCoreApplication.translate("Gragh_show", u"\u521d\u59cb\u5316", None))
+        self.Save_Button.setText(QCoreApplication.translate("Gragh_show", u"\u4fdd\u5b58\u6570\u636e\uff08Ctrl+S)", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("Gragh_show", u"\u4f20\u611f\u5668\u5217\u8868", None))
         self.label_37.setText(QCoreApplication.translate("Gragh_show", u"\u5f53\u524d\u72b6\u6001:", None))
         self.statues_label.setText("")

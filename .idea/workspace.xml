@@ -5,23 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Enose.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/auto_Enose.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/alg_puifile/ui_Alg_Frame_New.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run.bat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/running.py" beforeDir="false" afterPath="$PROJECT_DIR$/running.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/running.spec" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/tool/UI_show/alg/AlgModelWorker.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/alg/AlgModelWorker.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tool/UI_show/alg/form/AlgUiRight.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/alg/form/AlgUiRight.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/背景颜色.xlsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource_ui/alg_puifile/pic_tab_add.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/alg_puifile/pic_tab_add.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource_ui/ui_file/ChooseAndShow_1.ui" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/ui_file/ChooseAndShow_1.ui" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resource_ui/ui_pfile/ChooseAndShow_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/ui_pfile/ChooseAndShow_1.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tool/UI_show/Gragn_show_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/Gragn_show_ui.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +43,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.AlgUi.executor": "Run",
+    "Python.Gragn_show_ui.executor": "Run",
     "Python.running.executor": "Run",
     "Python.ui_Alg_Frame_New.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -61,6 +51,11 @@
     "last_opened_file_path": "E:/study/Python/PyCharm_study/auto_Enose(2)"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="E:\study\Python\PyCharm_study\Auto_E_nose\resource_ui\ui_pfile" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

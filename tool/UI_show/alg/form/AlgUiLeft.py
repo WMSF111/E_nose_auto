@@ -177,6 +177,20 @@ def load_csv_file_to_table(file_path, table_widget):
                 table_widget.setItem(row_idx, col_idx, item)
 
 
+def load_file_to_table(file_path, table_widget):
+    """
+    统一加载文件到表格，根据文件扩展名自动选择读取方式
+    """
+    file_ext = os.path.splitext(file_path)[1].lower()
+    if file_ext == '.txt':
+        load_txt_file_to_table(file_path, table_widget)
+    elif file_ext == '.csv':
+        load_csv_file_to_table(file_path, table_widget)
+    else:
+        # 对于其他文件类型，尝试使用txt方式读取
+        load_txt_file_to_table(file_path, table_widget)
+
+
 class LeftFrameManager:
     def __init__(self, ui_instance):
         """初始化左侧文件树管理器"""
@@ -411,10 +425,7 @@ class LeftFrameManager:
                 table_widget.horizontalHeader().setStretchLastSection(True)
 
                 # 读取文件内容并填充表格
-                if file_ext == '.txt':
-                    load_txt_file_to_table(file_path, table_widget)
-                elif file_ext == '.csv':
-                    load_csv_file_to_table(file_path, table_widget)
+                load_file_to_table(file_path, table_widget)
 
                 layout.addWidget(table_widget)
 
