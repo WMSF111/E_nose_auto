@@ -161,41 +161,70 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.ms._show_error_message.connect(self.a._show_error_message)
 
     def serial_setting(self):
-        if g_var.Auto_falg == True:
-            if (g_var.Port_select2 == "" or g_var.Port_select == ""):
-                self.statues_label.setText("串口初始化有问题")
+        """初始化串口设置"""
+        try:
+            # 初始化串口管理器
+            if g_var.Auto_falg:
+                # 双串口模式
+                if not all([g_var.Port_select, g_var.Bund_select, g_var.Port_select2, g_var.Bund_select2]):
+                    self.statues_label.setText("串口初始化有问题")
+                    logging.warning("双串口模式下缺少必要的串口配置")
+                    return
+                
+                sconfig = [g_var.Port_select, g_var.Bund_select, g_var.Port_select2, g_var.Bund_select2]
+                self.smng = mythread.SerialsMng(sconfig)
+                
+                # 初始化第一个串口
+                self.ser = self.smng.ser_arr[0]
+                self.ser.setSer(sconfig[0], sconfig[1])
+                
+                # 初始化第二个串口
+                self.ser1 = self.smng.ser_arr[1]
+                self.ser1.setSer(sconfig[2], sconfig[3])
+                
+                # 初始化操作对象
+                self.Serialopea = SO.Serial1opea(self.ms, self.ser, self.ser1)
+                
+                # 打开第二个串口
+                self.open_serial1(self.Serialopea.GetSigal1)
             else:
-                self.statues_label.setText("串口初始化成功")
-            sconfig = [g_var.Port_select, g_var.Bund_select, g_var.Port_select2, g_var.Bund_select2]
-            self.smng = mythread.SerialsMng(sconfig)
-            self.ser = self.smng.ser_arr[0]
-            self.ser.setSer(sconfig[0], sconfig[1])  # 设置串口及波特率
-            self.ser1 = self.smng.ser_arr[1]
-            self.ser1.setSer(sconfig[2], sconfig[3])  # 设置串口及波特率
-            # 初始化操作对象
-            self.Serialopea = SO.Serial1opea(self.ms, self.ser, self.ser1)
-            self.open_serial1(self.Serialopea.GetSigal1)
-        else:
-            if (g_var.Port_select == ""):
-                self.statues_label.setText("串口初始化有问题")
-            else:
-                self.statues_label.setText("串口初始化成功")
-            sconfig = [g_var.Port_select, g_var.Bund_select]
-            self.smng = mythread.SerialsMng(sconfig)
-            self.ser = self.smng.ser_arr[0]
-            self.ser.setSer(sconfig[0], sconfig[1])  # 设置串口及波特率
-            self.Serialopea = SO.Serial1opea(self.ms, self.ser)
-        # 完成串口信号初始化
-        self.open_serial(self.process_data)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.updata)
-        self.timer.start(1000)  # 每秒更新一次
-        # 开启线程
-        self.time_th = SO.time_thread()  # 创建时间线程信号
+                # 单串口模式
+                if not all([g_var.Port_select, g_var.Bund_select]):
+                    self.statues_label.setText("串口初始化有问题")
+                    logging.warning("单串口模式下缺少必要的串口配置")
+                    return
+                
+                sconfig = [g_var.Port_select, g_var.Bund_select]
+                self.smng = mythread.SerialsMng(sconfig)
+                
+                # 初始化串口
+                self.ser = self.smng.ser_arr[0]
+                self.ser.setSer(sconfig[0], sconfig[1])
+                
+                # 初始化操作对象
+                self.Serialopea = SO.Serial1opea(self.ms, self.ser)
+            
+            # 打开主串口
+            self.open_serial(self.process_data)
+            
+            # 初始化定时器
+            self.timer = QTimer(self)
+            self.timer.timeout.connect(self.updata)
+            self.timer.start(1000)  # 每秒更新一次
+            
+            # 初始化时间线程
+            self.time_th = SO.time_thread()
+            
+            self.statues_label.setText("串口初始化成功")
+            logging.info("串口初始化完成")
+            
+        except Exception as e:
+            self.statues_label.setText("串口初始化失败")
+            logging.error(f"串口初始化时出错: {e}")
 
     def open_serial(self, Signal): # 确保串口初始化
         if not self.ser.read_flag: # 如果串口存在
-            d = self.ser.open(Signal, stock=1)
+            d = self.ser.open(Signal, stock=1, slip=b'\\n\\r')
             print("控制串口初始化成功：", d)
 
 
@@ -294,7 +323,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         # 启动采样线程
         self.time_th.thread_loopfun(self.Serialopea.sample_collect)
 
-    def clear_room(self): # 开始采集
+    def clear_room(self): # 开始清理
         self.button_init(True)
         self.Serialopea._running = True
         # 启动清理线程
@@ -316,56 +345,100 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             Button.setStyleSheet("background-color: #215b5d; color: white;")  # 激活状态颜色
 
     def process_data(self, data):
-        self.now_data = 0
-        # 解析数据
-        if data != "" and (data[0] == "1"):
-            if(data == "11"):
+        """处理串口数据，根据数据类型执行不同的操作"""
+        try:
+            # 重置当前数据
+            self.now_data = 0
+            
+            # 处理命令数据
+            if data and data[0] in ["0", "1", "2", "3", "4"]:
+                self._process_command_data(data)
+            else:
+                # 处理传感器数据
+                self._process_sensor_data(data)
+        except Exception as e:
+            logging.error(f"处理数据时出错: {e}")
+            
+    def _process_command_data(self, data):
+        """处理命令数据"""
+        if data.startswith("1"):
+            if data == "11":
                 self.ms._Clear_Button.emit(False)
-            elif (data == "12"):
+            elif data == "12":
                 self.ms._Clear_Button.emit(True)
-        if data != "" and data[0] == "2":
+        
+        elif data.startswith("2"):
+            # 暂停串口以处理命令
             self.ser.pause()
-            if (data == "21"):
+            if data == "21":
                 self.ms._Collectbegin_Button.emit(False)
                 self.draw_flag = True
+                # 重置数据列表
                 self.data = [[] for _ in range(self.data_len)]
                 self.alldata = [[] for _ in range(self.data_len)]
-            elif (data == "22"):
+            elif data == "22":
                 self.ms._Collectbegin_Button.emit(True)
                 self.draw_flag = False
+            # 恢复串口
             self.ser.resume()
-        if data != "" and (data[0] == "1" or data[0] == "2" or data[0] == "3" or data[0] == "4" or data[0] == "0"):
-            if (data == "31"):
+        
+        elif data.startswith("3"):
+            if data == "31":
                 self.ms._Clearroom_Button.emit(False)
-            elif (data == "32"):
+            elif data == "32":
                 self.ms._Clearroom_Button.emit(True)
-            elif (data == "41"): # 自动模式
+        
+        elif data.startswith("4"):
+            if data == "41":  # 自动模式
                 self.state_open(self.Auto_Button, True)
-            elif (data == "42"):
+            elif data == "42":
                 self.state_open(self.Auto_Button, False)
-            elif (data == "00"): # 暂停
-                self.ms._Clear_Button.emit(True)
-                self.ms._Collectbegin_Button.emit(True)
-                self.ms._Clearroom_Button.emit(True)
-                self.Stop()
-        else:
-            now_data = self.decode_data(data)
-            if len(now_data) == self.data_len:
-                now_data = [int(v) for v in now_data]
+        
+        elif data == "00":  # 暂停
+            self.ms._Clear_Button.emit(True)
+            self.ms._Collectbegin_Button.emit(True)
+            self.ms._Clearroom_Button.emit(True)
+            self.Stop()
+    
+    def _process_sensor_data(self, data):
+        """处理传感器数据"""
+        now_data = self.decode_data(data)
+        if len(now_data) == self.data_len:
+            # 转换数据类型
+            now_data = [int(v) for v in now_data]
+            # 保存到全部数据
+            with self.lock:
                 for i, value in enumerate(now_data):
                     self.alldata[i].append(value)
-                self.now_data = now_data
+            # 更新当前数据
+            self.now_data = now_data
 
     def updata(self):
-        if self.draw_flag == True and self.now_data != 0:
+        """更新UI数据，包括图表和表格"""
+        if self.draw_flag and self.now_data:
+            # 复制当前数据并重置
             now_data = self.now_data
             self.now_data = 0
+            
+            # 更新数据列表
             for i, value in enumerate(now_data):
                 self.data[i].append(value)
-                if len(self.data[i]) > 300:  # 限制数据长度
+                # 限制数据长度，避免内存占用过大
+                if len(self.data[i]) > 300:
                     self.data[i].pop(0)
-            self.redraw()  # 更新图表
-            self.update_table()  # 更新表格
+            
+            # 异步更新UI，避免阻塞主线程
+            QTimer.singleShot(0, self._update_ui)
+    
+    def _update_ui(self):
+        """异步更新UI，提高性能"""
+        try:
+            # 更新图表
+            self.redraw()
+            # 更新表格
+            self.update_table()
+        except Exception as e:
+            logging.error(f"更新UI时出错: {e}")
 
 
     def decode_data(self, data):
@@ -403,32 +476,56 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             print("用户取消了选择")
 
     def savefile(self):
+        """保存数据到文件"""
         try:
-            with g_var.lock:
+            # 检查保存路径
+            save_dir = self.Folder_lineEdit.text()
+            if not save_dir:
+                logging.warning("保存路径未设置")
+                return
+            
+            # 确保保存目录存在
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir, exist_ok=True)
+            
+            # 复制数据以避免并发问题
+            with self.lock:
                 # 筛选出选中的传感器数据
-                selected_data = [self.alldata[g_var.sensors.index(sensor)] for sensor in self._data_visible]
-            # 转置筛选后的数据
+                selected_data = []
+                for sensor in self._data_visible:
+                    try:
+                        index = g_var.sensors.index(sensor)
+                        selected_data.append(self.alldata[index].copy())
+                    except ValueError:
+                        logging.warning(f"传感器 {sensor} 不存在")
+            
+            # 检查数据是否为空
+            if not selected_data or any(len(data) == 0 for data in selected_data):
+                logging.warning("没有数据可保存")
+                return
+            
+            # 转置数据
             transposed_data = list(map(list, zip(*selected_data)))
-            # 假设 selected_data 是一个包含多个传感器数据的二维列表或数组
-            selected_data_df = pd.DataFrame(transposed_data, columns=self._data_visible)  # 将数据转换为 DataFrame
-            # 获取当前时间
+            
+            # 创建DataFrame
+            selected_data_df = pd.DataFrame(transposed_data, columns=self._data_visible)
+            
+            # 生成文件名
             current_time = datetime.now()
-            base_filename = current_time.strftime("%Y_%m_%d")  # 格式化为 YYYY_MM_DD
-            file_path = os.path.join(self.Folder_lineEdit.text(), f"{base_filename}_{self.file_count}.txt")
-            # 检查文件是否存在，并增加计数器
+            base_filename = current_time.strftime("%Y_%m_%d")
+            
+            # 查找可用的文件名
+            file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}.txt")
             while os.path.exists(file_path):
                 self.file_count += 1
-                file_path = os.path.join(self.Folder_lineEdit.text(), f"{base_filename}_{self.file_count}.txt")
-                Tab_add.ADDTAB.save_text(selected_data_df, file_path)
-                # 将 DataFrame 转换为文本字符串
-                # text_str = selected_data_df.to_csv(index=False, sep=' ')
-                # with open(file_path, "w", encoding="utf-8") as f:
-                #     f.write(text_str)  # 保存为 TXT 文件
-                #
-                # print(f"Text file saved to {file_path}")
-
+                file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}.txt")
+            
+            # 保存文件
+            Tab_add.ADDTAB.save_text(selected_data_df, file_path)
+            logging.info(f"文件保存成功: {file_path}")
+            
         except Exception as e:
-            print("保存失败: " + str(e))
+            logging.error(f"保存文件时出错: {e}")
 
     def check_check_state(self, item):
         """
@@ -447,56 +544,93 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             self.redraw()
 
     def redraw(self):
-        """
-        Process data from store and prefer to draw.
-        :return:
-        """
-        # 清空所有绘图线
-        for line in self._data_lines.values():
-            line.setData([], [])  # 清空数据
-        # 更新绘图
-        for sensor_name in self._data_visible:  # 只处理选中的传感器
-            index = g_var.sensors.index(sensor_name)  # 获取传感器在 g_var.sensors 中的索引
-            data_list = self.data[index]  # 获取对应的数据列表
-            if data_list:  # 如果数据列表不为空
-                if sensor_name in self._data_lines:
-                    self._data_lines[sensor_name].setData(range(len(data_list)), data_list)  # 更新已存在的绘图线
-                else:
-                    self._data_lines[sensor_name] = self.plot_widget.plot(
-                        range(len(data_list)),
-                        data_list,
-                        pen=pg.mkPen(self.get_currency_color(sensor_name), width=3),
-                    )  # 创建新的绘图线
-                    self.plot_widget.repaint() # 手动更新
+        """更新图表显示"""
+        # 只处理选中的传感器
+        for sensor_name in self._data_visible:
+            try:
+                # 获取传感器索引
+                index = g_var.sensors.index(sensor_name)
+                data_list = self.data[index]
+                
+                if data_list:
+                    # 检查是否已存在绘图线
+                    if sensor_name in self._data_lines:
+                        # 更新已存在的绘图线
+                        self._data_lines[sensor_name].setData(range(len(data_list)), data_list)
+                    else:
+                        # 创建新的绘图线
+                        pen_color = self.get_currency_color(sensor_name)
+                        self._data_lines[sensor_name] = self.plot_widget.plot(
+                            range(len(data_list)),
+                            data_list,
+                            pen=pg.mkPen(pen_color, width=3),
+                        )
+            except Exception as e:
+                logging.error(f"更新图表时出错: {e}")
+        
+        # 移除不再可见的传感器绘图线
+        sensors_to_remove = []
+        for sensor_name in self._data_lines:
+            if sensor_name not in self._data_visible:
+                sensors_to_remove.append(sensor_name)
+        
+        for sensor_name in sensors_to_remove:
+            try:
+                # 移除绘图线
+                line = self._data_lines.pop(sensor_name, None)
+                if line:
+                    self.plot_widget.removeItem(line)
+            except Exception as e:
+                logging.error(f"移除绘图线时出错: {e}")
 
     def update_table(self):
-        # 先缓存所有的 QStandardItem 对象
-        items = [(QStandardItem(), QStandardItem()) for _ in range(len(g_var.sensors))]  # 列出所有 item 对象
-        for i, sensor_name in enumerate(g_var.sensors):
-            value = self.data[i][-1] if self.data[i] else 0
-
-            item_name, item_value = items[i]  # 获取已创建的 item 对象
-            item_name.setText(sensor_name)  # 设置传感器名称作为文本
-            item_name.setForeground(QBrush(QColor(self.get_currency_color(sensor_name))))  # 设置传感器名称颜色
-            item_name.setCheckable(True)  # 设置为可复选框
-            item_name.setEditable(False)  # 设置为不可编辑
-            if sensor_name in self._data_visible:
-                # 设置复选框状态为选中
-                if item_name.checkState() != Qt.CheckState.Checked:
-                    item_name.setCheckState(Qt.CheckState.Checked)
-
-            item_value.setText(f"{value:.2f}")  # 设置传感器数据
-            item_value.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)  # 设置文本对齐
-            item_value.setEditable(False)  # 设置为不可编辑
-
-        # 一次性更新所有数据
-        for i, (item_name, item_value) in enumerate(items):
-            self.model.setItem(i, 0, item_name)
-            self.model.setItem(i, 1, item_value)
-
-        # 设置列数为固定的 2
-        if self.model.columnCount() != 2:
-            self.model.setColumnCount(2)
+        """更新传感器数据表格"""
+        try:
+            # 检查模型是否需要重置
+            if self.model.rowCount() != len(g_var.sensors):
+                self.model.setRowCount(len(g_var.sensors))
+            
+            # 更新表格数据
+            for i, sensor_name in enumerate(g_var.sensors):
+                # 获取当前值
+                value = self.data[i][-1] if self.data[i] else 0
+                
+                # 获取或创建名称项
+                name_item = self.model.item(i, 0)
+                if not name_item:
+                    name_item = QStandardItem()
+                    name_item.setCheckable(True)
+                    name_item.setEditable(False)
+                    self.model.setItem(i, 0, name_item)
+                
+                # 更新名称项
+                if name_item.text() != sensor_name:
+                    name_item.setText(sensor_name)
+                    name_item.setForeground(QBrush(QColor(self.get_currency_color(sensor_name))))
+                
+                # 更新复选状态
+                should_be_checked = sensor_name in self._data_visible
+                if name_item.checkState() != (Qt.CheckState.Checked if should_be_checked else Qt.CheckState.Unchecked):
+                    name_item.setCheckState(Qt.CheckState.Checked if should_be_checked else Qt.CheckState.Unchecked)
+                
+                # 获取或创建值项
+                value_item = self.model.item(i, 1)
+                if not value_item:
+                    value_item = QStandardItem()
+                    value_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+                    value_item.setEditable(False)
+                    self.model.setItem(i, 1, value_item)
+                
+                # 更新值项
+                new_value_text = f"{value:.2f}"
+                if value_item.text() != new_value_text:
+                    value_item.setText(new_value_text)
+            
+            # 确保列数正确
+            if self.model.columnCount() != 2:
+                self.model.setColumnCount(2)
+        except Exception as e:
+            logging.error(f"更新表格时出错: {e}")
 
     def generate_random_color_list(self, length):
         """生成一个指定长度的随机十六进制颜色代码列表"""

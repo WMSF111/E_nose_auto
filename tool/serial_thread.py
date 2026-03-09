@@ -102,12 +102,13 @@ class myserial():
         自动识别数据类型：
           - 纯可打印 ASCII → utf-8 文本
           - 含非打印或 0x00 → 十六进制字符串
+          slip: 分隔符，默认 \r\n
         fun(line: str) 回调收到的内容
         """
         buffer = bytearray()  # 创建可变字节数组
-        slip_n = b'\n\r'  # 用于按行切帧
+        slip_n = b'\r\n'  # 用于按行切帧
         if slip != None:
-            slip_n = slip.encode()  # 将分隔符转换为字节串
+            slip_n = slip
 
         while True:
             with self.lock:
@@ -119,6 +120,7 @@ class myserial():
             if self.ser.in_waiting:
                 data = self.ser.read(self.ser.in_waiting)
                 buffer.extend(data)
+                print("buffer: ", buffer)
                 # 判断是否是十六进制接收模式
                 if self.hex_flag == 0:
                     # 判断缓冲区内是否有完整帧

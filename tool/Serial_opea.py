@@ -204,7 +204,6 @@ class Serial1opea():
     def sample_collect(self): # 信号采集
         if self._running == True:
             self.ms._Collectbegin_Button.emit(False)
-
         #开始采集
         text = ("21\n\r")
         num = 0
@@ -240,7 +239,7 @@ class Serial1opea():
             if num >= glo_var.sample_time + 5:
                 self.ms._statues_label.emit("采样时长超时")
                 self.ms._draw_close.emit()
-                self.ms._show_error_message.emit(str("采样时长超时", num, ", 请重新操作"))
+                self.ms._show_error_message.emit(f"采样时长超时{glo_var.sample_time + 5}, 请重新操作")
                 self.stop()
                 break
         self.ms._Collectbegin_Button.emit(True)
@@ -287,6 +286,11 @@ class Serial1opea():
 
     def stop(self, name = "Serial1opea"):
         self._running = False  # 设置读取标志为 False
+        # 确保串口恢复正常状态
+        if hasattr(self.ser, 'resume'):
+            self.ser.resume()
+        if hasattr(self.ser1, 'resume'):
+            self.ser1.resume()
         if name != None:
             print(name + "线程已结束")
         else:

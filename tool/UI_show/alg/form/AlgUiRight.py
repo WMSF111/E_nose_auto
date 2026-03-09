@@ -308,10 +308,19 @@ class RightFrameManager:
 
     def on_file_processed(self, filename, status):
         """单个文件处理完成"""
-        # 可以在UI中显示处理状态
-        current_text = self.ui.textEdit_results.toPlainText()
-        new_text = f"{filename}: {status}\n"
-        self.ui.textEdit_results.append(new_text)
+        # 确保textEdit_results控件存在
+        if hasattr(self.ui, 'textEdit_results'):
+            # 在UI中显示处理状态
+            new_text = f"{filename}: {status}\n"
+            self.ui.textEdit_results.append(new_text)
+            # 确保控件可见
+            self.ui.textEdit_results.setVisible(True)
+            # 滚动到底部
+            self.ui.textEdit_results.verticalScrollBar().setValue(
+                self.ui.textEdit_results.verticalScrollBar().maximum()
+            )
+        # 同时打印到控制台，确保错误信息可见
+        print(f"文件处理状态: {filename}: {status}")
 
     def on_preprocess_finished(self, success, message):
         """预处理完成"""
@@ -366,7 +375,7 @@ class RightFrameManager:
             first_file = data_files[0]
             file_ext = os.path.splitext(first_file)[1].lower()
             import pandas as pd
-            
+            print(file_ext)
             if file_ext == '.txt':
                 # 读取txt文件，使用空格分隔
                 df = pd.read_csv(first_file, sep='\s+')

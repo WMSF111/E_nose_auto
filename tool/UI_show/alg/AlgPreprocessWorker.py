@@ -34,6 +34,17 @@ class PreprocessWorker(QObject):
                 self.finished.emit(False, "没有选择任何文件")
                 return
 
+            # 确保保存目录存在
+            if not os.path.exists(self.data_dir):
+                try:
+                    os.makedirs(self.data_dir, exist_ok=True)
+                    print(f"创建保存目录: {self.data_dir}")
+                except Exception as e:
+                    error_msg = f"无法创建保存目录: {str(e)}"
+                    print(error_msg)
+                    self.finished.emit(False, error_msg)
+                    return
+
             if self.file_type == "CSV":
                 if self.target_col == "--请选择--" or not self.target_col:
                     self.finished.emit(False, "CSV文件类型必须选择target列")
@@ -56,6 +67,7 @@ class PreprocessWorker(QObject):
 
                 try:
                     file_name = os.path.basename(file_path)
+                    print(f"开始处理文件: {file_name}")
                     self.progress.emit(int((idx + 1) * 100 / total_files),
                                        f"正在处理: {file_name}")
 
@@ -66,18 +78,23 @@ class PreprocessWorker(QObject):
 
                     if success:
                         processed_count += 1
+                        print(f"文件处理成功: {file_name}")
                         self.file_processed.emit(file_name, "成功")
                     else:
                         error_files.append(file_name)
+                        print(f"文件处理失败: {file_name}")
                         self.file_processed.emit(file_name, "失败")
 
                 except Exception as e:
+                    error_msg = f"处理文件时出错: {str(e)}"
+                    print(error_msg)
                     error_files.append(os.path.basename(file_path))
                     self.file_processed.emit(os.path.basename(file_path), f"错误: {str(e)}")
 
             if self.running:
                 if processed_count == total_files:
                     msg = f"所有文件处理完成，共{processed_count}个文件"
+                    print(msg)
                     self.finished.emit(True, msg)
                 else:
                     msg = f"处理完成，成功{processed_count}个，失败{len(error_files)}个"
@@ -85,10 +102,13 @@ class PreprocessWorker(QObject):
                         msg += f"\n失败文件: {', '.join(error_files[:5])}"
                         if len(error_files) > 5:
                             msg += f"...等{len(error_files)}个文件"
+                    print(msg)
                     self.finished.emit(False, msg)
 
         except Exception as e:
-            self.finished.emit(False, f"处理过程中发生错误: {str(e)}")
+            error_msg = f"处理过程中发生错误: {str(e)}"
+            print(error_msg)
+            self.finished.emit(False, error_msg)
 
     def stop(self):
         self.running = False
@@ -100,18 +120,48 @@ class PreprocessWorker(QObject):
                 lines = f.readlines()
 
             data = []
-            for line in lines:
+            target_data = []
+            has_header = False
+            header = []
+            target_index = -1
+            
+            for i, line in enumerate(lines):
                 line = line.strip()
                 if line:  # 跳过空行
                     parts = re.split(r'\s+', line)
+                    
+                    # 检查是否是表头（包含非数值数据）
+                    if i == 0 and any(not part.replace('.', '', 1).replace('-', '', 1).isdigit() for part in parts):
+                        has_header = True
+                        header = parts
+                        # 查找target列索引
+                        if self.target_col and self.target_col in header:
+                            target_index = header.index(self.target_col)
+                        # 继续处理数据行
+                        continue
+                    
                     row_data = []
-                    for part in parts:
-                        try:
-                            value = float(part)
-                            row_data.append(value)
-                        except ValueError:
-                            raise ValueError(f"发现非数值数据: {part}")
-                    data.append(row_data)
+                    target_value = None
+                    
+                    for j, part in enumerate(parts):
+                        # 处理target列
+                        if j == target_index:
+                            target_value = part
+                        else:
+                            # 处理数值数据
+                            try:
+                                value = float(part)
+                                row_data.append(value)
+                            except ValueError:
+                                # 忽略非数值数据，特别是"type"列
+                                if part != "type":
+                                    raise ValueError(f"发现非数值数据: {part}")
+                    
+                    # 只添加非空行
+                    if row_data:
+                        data.append(row_data)
+                        if target_value is not None:
+                            target_data.append(target_value)
 
             if not data:
                 raise ValueError("文件为空或格式不正确")
@@ -121,21 +171,24 @@ class PreprocessWorker(QObject):
                 raise ValueError(f"数据行长度不一致: {data_lengths}")
 
             data_array = np.array(data)
-            file_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # 使用文件名为默认target
+            if not target_data:
+                file_name = os.path.splitext(os.path.basename(file_path))[0]
+                target_data = [file_name] * len(data)
 
             if self.filter_func == "--请选择--" and self.value_func == "--请选择--":
                 raise ValueError("请至少选择一种处理方法（滤波函数或值选择）")
 
             # 预处理数据
-            # TXT文件：使用文件名作为target
-            processed_data = self._apply_preprocessing(data_array, has_target=True, target=file_name)
+            processed_data = self._apply_preprocessing(data_array, has_target=True, target=target_data)
 
             # 生成新文件名 - TXT格式
             new_filename = self._generate_new_filename(file_path, "txt")
             new_filepath = os.path.join(self.data_dir, new_filename)
 
-            # 保存处理后的数据 - 纯数据格式
-            self._save_txt_file(processed_data, new_filepath)
+            # 保存处理后的数据，包含target列
+            self._save_txt_file_with_target(processed_data, target_data, new_filepath)
 
             return True, new_filepath
 
@@ -175,17 +228,23 @@ class PreprocessWorker(QObject):
             features = df[feature_cols].values
             target = df[self.target_col].values
 
-            processed_features, processed_target = self._apply_preprocessing(features, has_target=True, target=target,
-                                                                             is_csv=True)
+            # 调用预处理函数
+            result = self._apply_preprocessing(features, has_target=True, target=target,
+                                             is_csv=True)
 
+            # 根据返回值的类型处理
             if self.value_func != "--请选择--":
+                # 当有值选择处理时，返回两个值
+                processed_features, processed_target = result
                 if processed_features.ndim == 1:
                     processed_features = processed_features.reshape(-1, 1)
 
                 processed_df = pd.DataFrame(processed_features, columns=feature_cols)
                 processed_df[self.target_col] = processed_target
             else:
-                # 只有滤波处理：保持原始行数
+                # 只有滤波处理时，只返回一个值
+                processed_features = result
+                # 保持原始行数
                 processed_df = pd.DataFrame(processed_features, columns=feature_cols)
                 processed_df[self.target_col] = target
 
@@ -648,14 +707,65 @@ class PreprocessWorker(QObject):
 
     def _save_txt_file(self, data, filepath):
         """保存TXT文件 - 纯数据格式，每行用空格分隔"""
-        with open(filepath, 'w', encoding='utf-8') as f:
-            for row in data:
-                # 将每行数据用空格连接，保留适当精度
+        try:
+            # 确保保存目录存在
+            save_dir = os.path.dirname(filepath)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir, exist_ok=True)
+                print(f"创建保存目录: {save_dir}")
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                for row in data:
+                    # 将每行数据用空格连接，保留适当精度
+                    if len(data.shape) == 1:
+                        # 一维数据
+                        line = f"{row:.6f}" if isinstance(row, (float, np.floating)) else str(row)
+                        f.write(line + '\n')
+                    else:
+                        # 多维数据
+                        line = ' '.join([f"{x:.6f}" if isinstance(x, (float, np.floating)) else str(x) for x in row])
+                        f.write(line + '\n')
+            print(f"文件保存成功: {filepath}")
+        except Exception as e:
+            error_msg = f"保存TXT文件失败: {str(e)}"
+            print(error_msg)
+            raise Exception(error_msg)
+
+    def _save_txt_file_with_target(self, data, target_data, filepath):
+        """保存TXT文件 - 包含target列，target列作为第一列"""
+        try:
+            # 确保保存目录存在
+            save_dir = os.path.dirname(filepath)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir, exist_ok=True)
+                print(f"创建保存目录: {save_dir}")
+            
+            with open(filepath, 'w', encoding='utf-8') as f:
+                # 写入表头
+                if self.target_col:
+                    header = [self.target_col]
+                    # 添加数据列名（如果有）
+                    if len(data.shape) > 1:
+                        for i in range(data.shape[1]):
+                            header.append(f"col{i+1}")
+                    f.write(' '.join(header) + '\n')
+                
+                # 写入数据行
                 if len(data.shape) == 1:
                     # 一维数据
-                    line = f"{row:.6f}" if isinstance(row, (float, np.floating)) else str(row)
-                    f.write(line + '\n')
+                    for i, value in enumerate(data):
+                        target = target_data[i] if i < len(target_data) else ""
+                        line = f"{target} {value:.6f}"
+                        f.write(line + '\n')
                 else:
                     # 多维数据
-                    line = ' '.join([f"{x:.6f}" if isinstance(x, (float, np.floating)) else str(x) for x in row])
-                    f.write(line + '\n')
+                    for i, row in enumerate(data):
+                        target = target_data[i] if i < len(target_data) else ""
+                        values = ' '.join([f"{x:.6f}" for x in row])
+                        line = f"{target} {values}"
+                        f.write(line + '\n')
+            print(f"文件保存成功: {filepath}")
+        except Exception as e:
+            error_msg = f"保存TXT文件失败: {str(e)}"
+            print(error_msg)
+            raise Exception(error_msg)

@@ -157,7 +157,7 @@ class Serial_Init(QWidget):
                 g_var.Port_select2 = self.ui.serialComboBox2.currentText()  # 串口选择
                 self.ser1.setSer(g_var.Port_select2, g_var.Bund_select2)  # 设置串口及波特率 重设
             #再打开串口
-            d = self.ser.open(ms.print.emit)  # 打开串口，成功返回0，失败返回1， + str信息
+            d = self.ser.open(ms.print.emit, slip=b'\\n\\r')  # 打开串口，成功返回0，失败返回1， + str信息
             print(d)
             ms.print.emit(d[1])
             if g_var.Auto_falg == True:
