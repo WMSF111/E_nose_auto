@@ -1,12 +1,12 @@
 ''' 用来显示主界面和其他界面的关系'''
 
-import tool.UI_show.serial_show as se
+import resource_ui.UI_show.serial_show as se
 from PySide6.QtWidgets import QMainWindow, QMessageBox
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from resource_ui.ui_pfile.MianWindow import Ui_MainWindow
-from tool.UI_show.Gragn_show_ui import GraphShowWindow
-from tool.UI_show.Alg_ui_show import AlgShow_Init
+from resource_ui.UI_show.Gragn_show_ui import GraphShowWindow
+from resource_ui.UI_show.Alg_ui_show import AlgShow_Init
 
 The_url = "https://www.baidu.com" #要跳转的网页
 

@@ -119,7 +119,7 @@ class ADDTAB():
         if isinstance(text, str):  # 如果传入的是字符串，尝试转回DataFrame
             text = pd.read_csv(StringIO(text))  # 从文本恢复DataFrame
         # 设置文件类型过滤器，增加xlsx格式
-        filter_options = "TXT Files (*.txt);;CSV Files (*.csv);;Excel Files (*.xlsx);;All Files (*)"
+        filter_options = "CSV Files (*.csv);;TXT Files (*.txt);;Excel Files (*.xlsx);;All Files (*)"
 
         # 打开保存文件对话框，用户选择文件类型
         file_path, selected_filter = QFileDialog.getSaveFileName(None, "Save result", file_path,
@@ -153,10 +153,19 @@ class ADDTAB():
                 print(f"CSV file saved to {file_path}")
 
             else:  # 保存为TXT
-                # 将DataFrame转换为CSV格式的文本，然后写入TXT文件
-                text_str = text.to_csv(index=False, sep=' ')
+                # 方法2：直接生成文本，避免to_csv的换行符问题
+                # 写入表头
+                header = ' '.join(text.columns)
+                # 写入数据行
+                lines = [header]
+                for _, row in text.iterrows():
+                    line = ' '.join([str(val) for val in row])
+                    lines.append(line)
+                # 生成最终文本
+                text_str = '\n'.join(lines)
+                # 写入文件
                 with open(file_path, "w", encoding="utf-8") as f:
-                    f.write(text_str)  # 保存为TXT文件
+                    f.write(text_str)
                 print(f"Text file saved to {file_path}")
 
 def draw_scatter(ax, name, num, target, finalData, data=None):

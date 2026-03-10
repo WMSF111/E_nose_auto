@@ -15,13 +15,18 @@ from matplotlib.patches import Ellipse
 
 warnings.filterwarnings('ignore')
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
 
 def run(df, dir, params, dpi):
+    # 从params中获取源文件路径，用于确定文件格式
+    src_path = params.get('src_path', '')
+    file_ext = os.path.splitext(src_path)[1].lower() if src_path else '.txt'
+    # 确定保存文件的格式，默认为csv
+    save_format = file_ext if file_ext in ['.txt', '.csv'] else '.csv'
     print(">>>>>>>>>>>>>>>>>>>> 降维模型 PCA 运行 >>>>>>>>>>>>>>>>>>>>")
 
     # 记录开始时间
@@ -389,14 +394,16 @@ def run(df, dir, params, dpi):
         plt.close()
 
         # 保存碎石图数据
-        scree_data_path = os.path.join(output_dir, 'scree_plot_data.txt')
+        scree_data_path = os.path.join(output_dir, f'scree_plot_data{save_format}')
         scree_data = pd.DataFrame({
             'component': components_idx,
             'explained_variance': explained_variance,
             'explained_variance_ratio': explained_variance_ratio,
             'cumulative_variance': cumulative_variance
         })
-        scree_data.to_csv(scree_data_path, sep='\t', index=False)
+        # 根据文件格式选择分隔符
+        sep = '\t' if save_format == '.txt' else ','
+        scree_data.to_csv(scree_data_path, sep=sep, index=False)
 
         imgs.append({
             "name": "PCA碎石图",
@@ -473,13 +480,15 @@ def run(df, dir, params, dpi):
             plt.close()
 
             # 保存二维散点图数据
-            scatter_2d_data_path = os.path.join(output_dir, 'pca_2d_scatter_data.txt')
+            scatter_2d_data_path = os.path.join(output_dir, f'pca_2d_scatter_data{save_format}')
             scatter_2d_data = pd.DataFrame({
                 'PC1': X_pca[:, 0],
                 'PC2': X_pca[:, 1],
                 'target': y if y is not None else ['N/A'] * len(X_pca)
             })
-            scatter_2d_data.to_csv(scatter_2d_data_path, sep='\t', index=False)
+            # 根据文件格式选择分隔符
+            sep = '\t' if save_format == '.txt' else ','
+            scatter_2d_data.to_csv(scatter_2d_data_path, sep=sep, index=False)
 
             imgs.append({
                 "name": "PCA二维散点图",
@@ -534,14 +543,16 @@ def run(df, dir, params, dpi):
                 plt.close()
 
                 # 保存三维散点图数据
-                scatter_3d_data_path = os.path.join(output_dir, 'pca_3d_scatter_data.txt')
+                scatter_3d_data_path = os.path.join(output_dir, f'pca_3d_scatter_data{save_format}')
                 scatter_3d_data = pd.DataFrame({
                     'PC1': X_pca[:, 0],
                     'PC2': X_pca[:, 1],
                     'PC3': X_pca[:, 2],
                     'target': y if y is not None else ['N/A'] * len(X_pca)
                 })
-                scatter_3d_data.to_csv(scatter_3d_data_path, sep='\t', index=False)
+                # 根据文件格式选择分隔符
+                sep = '\t' if save_format == '.txt' else ','
+                scatter_3d_data.to_csv(scatter_3d_data_path, sep=sep, index=False)
 
                 imgs.append({
                     "name": "PCA三维散点图",
@@ -608,7 +619,8 @@ def run(df, dir, params, dpi):
                 "img": biplot_path,
                 "data": biplot_data_path
             })
-
+        # 保存载荷数据
+        loading_data_path = os.path.join(output_dir, 'pca_loading_data.txt')
         # 11. 生成主成分载荷图（前10个特征对前3个主成分的贡献）
         if n_components >= 3:
             plt.figure(figsize=(14, 8))
@@ -641,8 +653,6 @@ def run(df, dir, params, dpi):
             plt.savefig(loading_plot_path, dpi=dpi)
             plt.close()
 
-            # 保存载荷数据
-            loading_data_path = os.path.join(output_dir, 'pca_loading_data.txt')
             loading_data = pd.DataFrame(components[:n_components, :].T,
                                         columns=[f'PC{i + 1}' for i in range(n_components)],
                                         index=X_columns)
@@ -717,11 +727,13 @@ def run(df, dir, params, dpi):
 
         # 14. 保存PCA结果数据
         # 保存主成分得分
-        pca_scores_path = os.path.join(output_dir, 'pca_scores.txt')
+        pca_scores_path = os.path.join(output_dir, f'pca_scores{save_format}')
         pca_scores_df = pd.DataFrame(X_pca, columns=[f'PC{i + 1}' for i in range(n_components)])
         if y is not None:
             pca_scores_df['target'] = y
-        pca_scores_df.to_csv(pca_scores_path, sep='\t', index=False)
+        # 根据文件格式选择分隔符
+        sep = '\t' if save_format == '.txt' else ','
+        pca_scores_df.to_csv(pca_scores_path, sep=sep, index=False)
 
         # 15. 保存模型信息
         model_info = {

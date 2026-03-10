@@ -118,10 +118,11 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.draw = None
         self.time_th = None
         self.draw_flag = False
+        self.ser = None
         self.get_time = 60
         self._data_lines = dict()  # 已存在的绘图线
         self._data_colors = dict()  # 绘图颜色
-        self._data_visible = g_var.sensors.copy() # 选择要看的传感器
+        self._data_visible = g_var.sensors.copy() # 选择要看的传感器，初始选择所有传感器
         self.colors = self.generate_random_color_list(self.data_len)
         self.color_cycle = cycle(self.colors)
 
@@ -131,7 +132,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.model.itemChanged.connect(self.check_check_state)  # 连接项目更改信号
         self.Senser_stableView.setModel(self.model)
         self.Senser_stableView.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
+        
         # 初始化串口
         self.serial_setting()
         # 连接信号
@@ -144,7 +145,11 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.Folder_Button.clicked.connect(self.savefolder) # 确认保存路径
         self.Stop_Button.clicked.connect(self.Stop)  # 全部暂停
         self.Save_Button.clicked.connect(self.savefile) #保存文件
+        g_var.sample_time = (int)(self.Sample_spinBox.value()) #采样时长
+        g_var.exhaust_time = self.Cleartime_spinBox.value() # 洗气时常
+        g_var.base_time = self.Basetime_spinBox.value() # 基线时长
         if g_var.Auto_falg == True:
+            self.ser1 = None
             self.Autochoose_Button.clicked.connect(self.Autoinsample)  # 自动进样器
 
     def initMS(self):
@@ -224,7 +229,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
 
     def open_serial(self, Signal): # 确保串口初始化
         if not self.ser.read_flag: # 如果串口存在
-            d = self.ser.open(Signal, stock=1, slip=b'\\n\\r')
+            d = self.ser.open(Signal, stock=1, slip=b'\n\r')
             print("控制串口初始化成功：", d)
 
 
@@ -455,10 +460,13 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         # 只在 self.pairs 非空时进行后续操作
         if self.pairs:
             # 如果你仍需要按顺序的 16 个值：
-            ordered_keys = list(self.pairs.keys())  # ['MQ3_1','MQ3_2',...,'base']
+            # 去除传感器名称中的空格
+            ordered_keys = [key.strip() for key in self.pairs.keys() if key.strip()]
+            # 重新构建pairs字典，确保键不包含空格
+            self.pairs = {key: self.pairs[key] for key in ordered_keys}
 
             # 确保顺序一致
-            if g_var.sensors[0] != ordered_keys[0]:
+            if not g_var.sensors or (g_var.sensors and g_var.sensors[0] != ordered_keys[0]):
                 g_var.sensors = ordered_keys
                 self._data_visible = g_var.sensors.copy()  # 选择要看的传感器
 
@@ -481,6 +489,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             # 检查保存路径
             save_dir = self.Folder_lineEdit.text()
             if not save_dir:
+                self.ms._show_error_message.emit("请先设置保存路径")
                 logging.warning("保存路径未设置")
                 return
             
@@ -492,36 +501,76 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
             with self.lock:
                 # 筛选出选中的传感器数据
                 selected_data = []
-                for sensor in self._data_visible:
-                    try:
-                        index = g_var.sensors.index(sensor)
-                        selected_data.append(self.alldata[index].copy())
-                    except ValueError:
-                        logging.warning(f"传感器 {sensor} 不存在")
+                selected_sensors = []
+                # 确保g_var.sensors不为空
+                if not g_var.sensors:
+                    logging.error("传感器列表为空")
+                    self.ms._show_error_message.emit("传感器列表为空，无法保存")
+                    return
+                
+                # 遍历所有传感器，确保数据和传感器名称一一对应
+                for i, sensor in enumerate(g_var.sensors):
+                    # 检查传感器是否在选中列表中
+                    if sensor in self._data_visible:
+                        try:
+                            # 去除传感器名称中的空格
+                            sensor = sensor.strip()
+                            if sensor:
+                                selected_data.append(self.alldata[i].copy())
+                                selected_sensors.append(sensor)
+                        except Exception as e:
+                            logging.warning(f"处理传感器 '{sensor}' 时出错: {e}")
             
             # 检查数据是否为空
             if not selected_data or any(len(data) == 0 for data in selected_data):
                 logging.warning("没有数据可保存")
                 return
             
+            # 检查所有数据长度是否一致
+            data_lengths = [len(data) for data in selected_data]
+            if len(set(data_lengths)) > 1:
+                logging.error(f"数据长度不一致: {data_lengths}")
+                self.ms._show_error_message.emit("数据长度不一致，无法保存")
+                return
+            
             # 转置数据
             transposed_data = list(map(list, zip(*selected_data)))
             
+            # 检查转置后的数据长度
+            logging.info(f"转置前数据长度: {len(selected_data)}, 转置后数据长度: {len(transposed_data)}")
+            logging.info(f"传感器数量: {len(selected_sensors)}, 列名数量: {len(selected_sensors)}")
+            
             # 创建DataFrame
-            selected_data_df = pd.DataFrame(transposed_data, columns=self._data_visible)
+            try:
+                selected_data_df = pd.DataFrame(transposed_data, columns=selected_sensors)
+                logging.info(f"成功创建DataFrame，形状: {selected_data_df.shape}")
+            except Exception as e:
+                logging.error(f"创建DataFrame时出错: {e}")
+                logging.error(f"转置后数据长度: {len(transposed_data)}")
+                logging.error(f"列名数量: {len(selected_sensors)}")
+                if transposed_data:
+                    logging.error(f"第一行数据长度: {len(transposed_data[0])}")
+                self.ms._show_error_message.emit(f"创建数据表格时出错: {e}")
+                return
             
             # 生成文件名
             current_time = datetime.now()
             base_filename = current_time.strftime("%Y_%m_%d")
             
             # 查找可用的文件名
-            file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}.txt")
+            file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}")
             while os.path.exists(file_path):
                 self.file_count += 1
-                file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}.txt")
+                file_path = os.path.join(save_dir, f"{base_filename}_{self.file_count}")
             
             # 保存文件
-            Tab_add.ADDTAB.save_text(selected_data_df, file_path)
+            try:
+                Tab_add.ADDTAB.save_text(selected_data_df, file_path)
+                logging.info(f"文件保存成功: {file_path}")
+            except Exception as e:
+                logging.error(f"保存文件时出错: {e}")
+                self.ms._show_error_message.emit(f"保存文件时出错: {e}")
+                return
             logging.info(f"文件保存成功: {file_path}")
             
         except Exception as e:
@@ -600,6 +649,7 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
                 if not name_item:
                     name_item = QStandardItem()
                     name_item.setCheckable(True)
+                    name_item.setCheckState(Qt.CheckState.Checked)  # 默认选中所有传感器
                     name_item.setEditable(False)
                     self.model.setItem(i, 0, name_item)
                 
@@ -647,25 +697,50 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         return "#{:02x}{:02x}{:02x}".format(random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
     def closeEvent(self, event):
-        # 1. 停所有串口线程
-        if hasattr(self, 'smng'): # 关闭所有串口
-            for sop in self.smng.ser_arr:
-                if hasattr(sop, 'read_flag'):
-                    sop.read_flag = False
-                    # 如果用了 QThread，也调 quit + wait
-                    if hasattr(sop, 'thread') and sop.thread.isRunning():
-                        sop.stop()
-                        print("sop.stop()")
-                        sop.thread.quit()
-                        sop.thread.wait()
-        if self.time_th:
-            self.time_th.stop("time_th")
-        # if self.draw:
-        #     self.draw.stop("draw")
-        if self.timer.isActive():
-            self.timer.stop()  # 停止计时器
-
-        event.accept()  # 允许窗口真正关闭
+        try:
+            # 1. 停止定时器（必须在主线程中操作）
+            if hasattr(self, 'timer') and self.timer.isActive():
+                self.timer.stop()  # 停止计时器
+                print("定时器已停止")
+            
+            # 2. 停止时间线程
+            if hasattr(self, 'time_th') and self.time_th:
+                # 只设置标志，让线程自然结束，避免跨线程操作
+                self.time_th._running = False
+                self.time_th._stop_evt.set()
+                print("时间线程已停止")
+            
+            # 3. 停止串口操作
+            if hasattr(self, 'Serialopea') and self.Serialopea:
+                self.Serialopea._running = False
+                print("串口操作已停止")
+            
+            # 4. 关闭所有串口
+            if hasattr(self, 'smng'): # 关闭所有串口
+                for sop in self.smng.ser_arr:
+                    if hasattr(sop, 'read_flag'):
+                        sop.read_flag = False
+                        # 如果用了 QThread，也调 quit + wait
+                        if hasattr(sop, 'thread') and hasattr(sop.thread, 'isRunning') and sop.thread.isRunning():
+                            try:
+                                sop.stop()
+                                print("sop.stop()")
+                                if hasattr(sop.thread, 'quit'):
+                                    sop.thread.quit()
+                                if hasattr(sop.thread, 'wait'):
+                                    sop.thread.wait(1000)  # 等待最多1秒
+                            except Exception as e:
+                                print(f"关闭串口线程时出错: {e}")
+            
+            # 5. 给线程一点时间来清理
+            import time
+            time.sleep(0.1)
+            
+            print("所有资源已清理")
+            event.accept()  # 允许窗口真正关闭
+        except Exception as e:
+            print(f"关闭事件处理时出错: {e}")
+            event.accept()  # 即使出错也要允许窗口关闭
 
     def eventFilter(self, source, event):
         # 过滤来自plot_widget的事件

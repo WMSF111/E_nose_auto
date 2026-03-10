@@ -14,7 +14,7 @@ from scipy.stats import f_oneway
 
 warnings.filterwarnings('ignore')
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
@@ -58,6 +58,11 @@ def confidence_ellipse(x, y, ax, n_std=2.0, facecolor='none', **kwargs):
 
 
 def run(df, dir, params, dpi):
+    # 从params中获取源文件路径，用于确定文件格式
+    src_path = params.get('src_path', '')
+    file_ext = os.path.splitext(src_path)[1].lower() if src_path else '.txt'
+    # 确定保存文件的格式，默认为txt
+    save_format = file_ext if file_ext in ['.txt', '.csv'] else '.txt'
     print(">>>>>>>>>>>>>>>>>>>> 降维模型 LDA 运行 >>>>>>>>>>>>>>>>>>>>")
 
     # 记录开始时间
@@ -525,13 +530,15 @@ def run(df, dir, params, dpi):
             plt.close()
 
             # 保存二维投影数据
-            scatter_2d_data_path = os.path.join(output_dir, 'lda_2d_projection_data.txt')
+            scatter_2d_data_path = os.path.join(output_dir, f'lda_2d_projection_data{save_format}')
             scatter_2d_data = pd.DataFrame({
                 'LD1': X_lda[:, 0],
                 'LD2': X_lda[:, 1],
                 'target': [y_classes[label] if label < len(y_classes) else f"Class_{label}" for label in y_encoded]
             })
-            scatter_2d_data.to_csv(scatter_2d_data_path, sep='\t', index=False)
+            # 根据文件格式选择分隔符
+            sep = '\t' if save_format == '.txt' else ','
+            scatter_2d_data.to_csv(scatter_2d_data_path, sep=sep, index=False)
 
             imgs.append({
                 "name": "LDA二维投影图",
@@ -597,14 +604,16 @@ def run(df, dir, params, dpi):
                 plt.close()
 
                 # 保存三维投影数据
-                scatter_3d_data_path = os.path.join(output_dir, 'lda_3d_projection_data.txt')
+                scatter_3d_data_path = os.path.join(output_dir, f'lda_3d_projection_data{save_format}')
                 scatter_3d_data = pd.DataFrame({
                     'LD1': X_lda[:, 0],
                     'LD2': X_lda[:, 1],
                     'LD3': X_lda[:, 2],
                     'target': [y_classes[label] if label < len(y_classes) else f"Class_{label}" for label in y_encoded]
                 })
-                scatter_3d_data.to_csv(scatter_3d_data_path, sep='\t', index=False)
+                # 根据文件格式选择分隔符
+                sep = '\t' if save_format == '.txt' else ','
+                scatter_3d_data.to_csv(scatter_3d_data_path, sep=sep, index=False)
 
                 imgs.append({
                     "name": "LDA三维投影图",

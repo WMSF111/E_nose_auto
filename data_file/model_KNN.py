@@ -13,7 +13,7 @@ import json
 import time
 from datetime import datetime
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题

@@ -54,6 +54,9 @@ class ModelWorker(QThread):
                     df = pd.read_csv(self.src_path, sep='\s+')
                 result = {}                             # 算法结果
 
+                # 将源文件路径添加到参数中，用于确定保存文件的格式
+                self.params['src_path'] = self.src_path
+                
                 if self.group_name == "分类模型":
                     if self.model_name == "LDA":
                         result = data_file.model_LDA.run(df, self.dir_path, self.params, self.dpi)

@@ -9,12 +9,12 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel,
                                QFrame, QMessageBox, QApplication, QListWidgetItem, QSpinBox, QDoubleSpinBox, QCheckBox,
                                QComboBox, QLineEdit)
 
-from tool.UI_show.alg import AlgModelWorker, AlgModelParameters
-from tool.UI_show.alg.AlgPreprocessWorker import PreprocessWorker
+from resource_ui.UI_show.alg import AlgModelWorker, AlgModelParameters
+from resource_ui.UI_show.alg.AlgPreprocessWorker import PreprocessWorker
 import pandas as pd
 from datetime import datetime
 
-from tool.UI_show.alg.Zoom import ZoomableLabel
+from resource_ui.UI_show.alg.Zoom import ZoomableLabel
 
 
 class RightFrameManager:
@@ -771,8 +771,8 @@ class RightFrameManager:
             return
         selected_file = selected_files[0]
         ext = os.path.splitext(selected_file)[1].lower()
-        if ext != ".csv":
-            QMessageBox.warning(self.ui, "警告", "请选择CSV格式的计算的数据文件")
+        if ext not in [".csv", ".txt"]:
+            QMessageBox.warning(self.ui, "警告", "请选择CSV或TXT格式的计算的数据文件")
             return
 
         # 点击计算前先设置结果中的控件信息禁用

@@ -11,7 +11,7 @@ import json
 import time
 from datetime import datetime
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
@@ -25,10 +25,10 @@ def run(df, dir, params, dpi):
     start_timestamp = start_time.strftime("%Y-%m-%d %H:%M:%S")
     start_millis = int(time.time() * 1000)
 
-    # 创建时间戳目录
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.join(dir, f"ann_output_{timestamp}")
-    os.makedirs(output_dir, exist_ok=True)
+    # # 创建时间戳目录
+    # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # output_dir = os.path.join(dir, f"ann_output_{timestamp}")
+    # os.makedirs(output_dir, exist_ok=True)
 
     # 初始化结果字符串
     result_str = ""

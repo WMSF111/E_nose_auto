@@ -15,7 +15,7 @@ from scipy.sparse.linalg import eigsh
 
 warnings.filterwarnings('ignore')
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
@@ -59,6 +59,11 @@ def confidence_ellipse(x, y, ax, n_std=2.0, facecolor='none', **kwargs):
 
 
 def run(df, dir, params, dpi):
+    # 从params中获取源文件路径，用于确定文件格式
+    src_path = params.get('src_path', '')
+    file_ext = os.path.splitext(src_path)[1].lower() if src_path else '.txt'
+    # 确定保存文件的格式，默认为txt
+    save_format = file_ext if file_ext in ['.txt', '.csv'] else '.csv'
     print(">>>>>>>>>>>>>>>>>>>> 降维模型 LLE 运行 >>>>>>>>>>>>>>>>>>>>")
 
     # 记录开始时间
@@ -474,13 +479,15 @@ def run(df, dir, params, dpi):
             plt.close()
 
             # 保存二维嵌入数据
-            scatter_2d_data_path = os.path.join(output_dir, 'lle_2d_embedding_data.txt')
+            scatter_2d_data_path = os.path.join(output_dir, f'lle_2d_embedding_data{save_format}')
             scatter_2d_data = pd.DataFrame({
                 'LLE1': X_lle[:, 0],
                 'LLE2': X_lle[:, 1],
                 'target': y if y is not None else ['N/A'] * len(X_lle)
             })
-            scatter_2d_data.to_csv(scatter_2d_data_path, sep='\t', index=False)
+            # 根据文件格式选择分隔符
+            sep = '\t' if save_format == '.txt' else ','
+            scatter_2d_data.to_csv(scatter_2d_data_path, sep=sep, index=False)
 
             imgs.append({
                 "name": "LLE二维嵌入图",
@@ -536,14 +543,16 @@ def run(df, dir, params, dpi):
                 plt.close()
 
                 # 保存三维嵌入数据
-                scatter_3d_data_path = os.path.join(output_dir, 'lle_3d_embedding_data.txt')
+                scatter_3d_data_path = os.path.join(output_dir, f'lle_3d_embedding_data{save_format}')
                 scatter_3d_data = pd.DataFrame({
                     'LLE1': X_lle[:, 0],
                     'LLE2': X_lle[:, 1],
                     'LLE3': X_lle[:, 2],
                     'target': y if y is not None else ['N/A'] * len(X_lle)
                 })
-                scatter_3d_data.to_csv(scatter_3d_data_path, sep='\t', index=False)
+                # 根据文件格式选择分隔符
+                sep = '\t' if save_format == '.txt' else ','
+                scatter_3d_data.to_csv(scatter_3d_data_path, sep=sep, index=False)
 
                 imgs.append({
                     "name": "LLE三维嵌入图",

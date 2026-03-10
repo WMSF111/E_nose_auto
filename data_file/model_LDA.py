@@ -11,13 +11,18 @@ import json
 import time
 from datetime import datetime
 
-from tool.UI_show.alg import AlgModelParameters
+from resource_ui.UI_show.alg import AlgModelParameters
 
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
 
 
 def run(df, dir, params, dpi):
+    # 从params中获取源文件路径，用于确定文件格式
+    src_path = params.get('src_path', '')
+    file_ext = os.path.splitext(src_path)[1].lower() if src_path else '.txt'
+    # 确定保存文件的格式，默认为csv
+    save_format = file_ext if file_ext in ['.txt', '.csv'] else '.csv'
     print(">>>>>>>>>>>>>>>>>>>> 分类模型 LDA 运行 >>>>>>>>>>>>>>>>>>>>")
 
     # 记录开始时间
@@ -141,7 +146,7 @@ def run(df, dir, params, dpi):
             set_type = np.concatenate([['训练集'] * len(y_train), ['测试集'] * len(y_test)])
 
             # 保存数据
-            scatter_data_path = os.path.join(output_dir, 'lda_projection_data.txt')
+            scatter_data_path = os.path.join(output_dir, f'lda_projection_data{save_format}')
             scatter_data = pd.DataFrame({
                 'LD1': X_lda_all[:, 0],
                 'LD2': X_lda_all[:, 1] if X_lda_all.shape[1] > 1 else np.zeros(len(X_lda_all)),
@@ -149,7 +154,9 @@ def run(df, dir, params, dpi):
                 'class_encoded': y_all,
                 'set_type': set_type
             })
-            scatter_data.to_csv(scatter_data_path, sep='\t', index=False)
+            # 根据文件格式选择分隔符
+            sep = '\t' if save_format == '.txt' else ','
+            scatter_data.to_csv(scatter_data_path, sep=sep, index=False)
 
             # 绘制判别轴投影图
             plt.figure(figsize=(12, 8))

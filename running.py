@@ -7,9 +7,9 @@ import resource_ui.web_app
 from resource_ui.modules import *
 from resource_ui.web_app import run
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
-import tool.UI_show.serial_show as se
-from tool.UI_show.Gragn_show_ui import GraphShowWindow
-from tool.UI_show.alg.form.AlgUi import AlgUIFrame # 第三版界面
+import resource_ui.UI_show.serial_show as se
+from resource_ui.UI_show.Gragn_show_ui import GraphShowWindow
+from resource_ui.UI_show.alg.form.AlgUi import AlgUIFrame # 第三版界面
 
 # 高DPI支持 - 确保在高分辨率显示器上正确显示
 #os.environ["QT_FONT_DPI"] = "150"
@@ -19,19 +19,17 @@ WIDGETS = None  # UI组件全局引用，用于外部访问
 APP_TITLE = "实验平台"  # 应用程序标题
 APP_DESCRIPTION = "智能电子鼻实验及算法平台"  # 应用程序描述
 
-
 class MainWindow(QMainWindow):
     """主窗口类，负责应用程序的UI和功能管理"""
 
     def __init__(self):
         """初始化主窗口"""
         super().__init__()
-        self._init_ui()
-        self._setup_window()
-        self._init_modules()
-        # 连接信号和槽
-        self._connect_signals()
-        self._apply_theme()
+        self._init_ui() # 初始化UI组件
+        self._setup_window() # 设置窗口基本属性
+        self._init_modules() # 初始化所有功能模块
+        self._connect_signals() # 连接信号和槽
+        self._apply_theme() # 应用主题样式
         self.showMaximized() #.showNormal()  # 可以切换为 showMaximized() 以全屏显示
         self._set_initial_page()
 
@@ -48,7 +46,6 @@ class MainWindow(QMainWindow):
         """设置窗口基本属性"""
         # 设置窗口标题
         self.setWindowTitle(APP_TITLE)
-
         WIDGETS.titleLeftApp.setText(APP_TITLE)
         WIDGETS.titleRightInfo.setText(APP_DESCRIPTION)
 
@@ -113,29 +110,37 @@ class MainWindow(QMainWindow):
         if handler:
             handler(button)
 
+    # 串口设置按钮的调用函数
     def _handle_serial_button(self, button):
         if self.test_show.ser:
             self.test_show.SerStop()
+        
         """处理串口按钮点击 - 切换到串口页面"""
         WIDGETS.stackedWidget.setCurrentWidget(self.serial_init)
         UIFunctions.resetStyle(self, 'btn_serial')
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
+    # 开始实验按钮的调用函数
     def _handle_test_button(self, button):
         """处理测试按钮点击 - 切换到图表显示页面"""
         self._stop_serial_connection()
         self.test_show = GraphShowWindow()
         WIDGETS.stackedWidget.addWidget(self.test_show)  # 将串口界面添加到 stackedWidget
+        
         WIDGETS.stackedWidget.setCurrentWidget(self.test_show)
         UIFunctions.resetStyle(self, 'btn_test')
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
+    # 算法选择按钮的调用函数
     def _handle_algorithm_button(self, button):
+        if self.test_show.ser:
+            self.test_show.SerStop()
         """处理算法按钮点击 - 切换到算法配置页面"""
         WIDGETS.stackedWidget.setCurrentWidget(self.alg_show)
         UIFunctions.resetStyle(self, 'btn_alg')
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
+    # 大模型按钮的调用函数
     def _handle_webapp_button(self, button):
         """处理Web应用按钮点击 - 启动Flask Web服务器"""
         try:
@@ -161,6 +166,7 @@ class MainWindow(QMainWindow):
                     self.serial_init.ser_open_look_ui(True)
         except:
             self._show_error_message("请先选择串口")
+
 
     def _show_error_message(self, text):
         """显示错误消息对话框"""
@@ -197,18 +203,31 @@ class MainWindow(QMainWindow):
         ]
 
         for module in modules_to_close:
-            if module and hasattr(module, 'closeEvent'):
+            if module:
                 try:
-                    module.closeEvent(event)
+                    # 1. 调用模块的关闭事件
+                    if hasattr(module, 'closeEvent'):
+                        module.closeEvent(event)
+                    # 2. 销毁Qt组件（新增：彻底释放）
+                    if hasattr(module, 'deleteLater'):
+                        module.deleteLater()
                 except Exception as e:
                     print(f"关闭模块时出错: {e}")
 
     def _graceful_shutdown(self):
         """关闭应用程序，先尝试正常关闭，失败则强制结束"""
         try:
+            # 1. 先停止所有线程
+            for thread in threading.enumerate():
+                if thread != threading.main_thread() and thread.is_alive():
+                    # 给非主线程1秒时间退出
+                    thread.join(timeout=1.0)
+            # 2. 尝试关闭Flask
             if hasattr(resource_ui.web_app, 'shutdown'):
                 resource_ui.web_app.shutdown()
-        except Exception:
+        except Exception as e:
+            print(f"优雅关闭失败，强制结束进程: {e}")
+            # 3. 强制结束进程（最后手段）
             pid = os.getpid()
             os.kill(pid, signal.SIGTERM)
 
