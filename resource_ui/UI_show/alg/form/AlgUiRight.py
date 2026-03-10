@@ -9,12 +9,12 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QLabel,
                                QFrame, QMessageBox, QApplication, QListWidgetItem, QSpinBox, QDoubleSpinBox, QCheckBox,
                                QComboBox, QLineEdit)
 
-from tool.UI_show.alg import AlgModelWorker, AlgModelParameters
-from tool.UI_show.alg.AlgPreprocessWorker import PreprocessWorker
+from resource_ui.UI_show.alg import AlgModelWorker, AlgModelParameters
+from resource_ui.UI_show.alg.AlgPreprocessWorker import PreprocessWorker
 import pandas as pd
 from datetime import datetime
 
-from tool.UI_show.alg.Zoom import ZoomableLabel
+from resource_ui.UI_show.alg.Zoom import ZoomableLabel
 
 
 class RightFrameManager:

@@ -144,7 +144,9 @@ class GraphShowWindow(QWidget, Ui_Gragh_show):
         self.Folder_Button.clicked.connect(self.savefolder) # 确认保存路径
         self.Stop_Button.clicked.connect(self.Stop)  # 全部暂停
         self.Save_Button.clicked.connect(self.savefile) #保存文件
+        self.ser = None
         if g_var.Auto_falg == True:
+            self.ser1 = None
             self.Autochoose_Button.clicked.connect(self.Autoinsample)  # 自动进样器
 
     def initMS(self):

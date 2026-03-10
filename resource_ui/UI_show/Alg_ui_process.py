@@ -19,8 +19,8 @@ import data_file.model_PCA
 import data_file.model_LDA2
 import data_file.model_LLE
 from resource_ui.alg_puifile.ui_AlgProcess import Ui_Form
-from tool.UI_show.Alg_show_scv import CSVTableWidget
-from tool.UI_show.Alg_show_png import PngViewer
+from resource_ui.UI_show.Alg_show_scv import CSVTableWidget
+from resource_ui.UI_show.Alg_show_png import PngViewer
 
 Model_Class = ["--请选择--", "分类模型", "预测模型", "降维模型"]       # 算法分类
 Model_Classify = ["LDA", "SVM", "RF"]                                # 分类模型 算法

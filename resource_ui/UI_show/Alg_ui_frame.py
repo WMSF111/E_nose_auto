@@ -20,8 +20,8 @@ import data_file.model_SVR
 import data_file.model_PCA
 import data_file.model_LDA2
 import data_file.model_LLE
-from tool.UI_show.Alg_show_scv import CSVTableWidget
-from tool.UI_show.Alg_show_png import PngViewer
+from resource_ui.UI_show.Alg_show_scv import CSVTableWidget
+from resource_ui.UI_show.Alg_show_png import PngViewer
 
 import data_file.filter as filter
 

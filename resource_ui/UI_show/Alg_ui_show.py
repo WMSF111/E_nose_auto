@@ -14,7 +14,7 @@ from resource_ui.alg_puifile.ui_AlgModule import Ui_Form
 # import matplotlib.pyplot as plt
 # import global_var as glov
 from data_file.alg_tabadd import ALG_TAB_ADD
-from tool.UI_show.Alg_ui_process import AlgProcess
+from resource_ui.UI_show.Alg_ui_process import AlgProcess
 
 # plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为 SimHei
 # plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题

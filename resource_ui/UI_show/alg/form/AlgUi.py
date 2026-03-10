@@ -5,9 +5,9 @@ from PySide6.QtWidgets import QApplication, QWidget
 
 # 导入各个模块
 from resource_ui.alg_puifile.ui_Alg_Frame_New import Ui_Form
-from tool.UI_show.alg.form.AlgUiLeft import LeftFrameManager
-from tool.UI_show.alg.form.AlgUiBottom import BottomFrameManager
-from tool.UI_show.alg.form.AlgUiRight import RightFrameManager
+from resource_ui.UI_show.alg.form.AlgUiLeft import LeftFrameManager
+from resource_ui.UI_show.alg.form.AlgUiRight import RightFrameManager
+from resource_ui.UI_show.alg.form.AlgUiBottom import BottomFrameManager
 
 
 class AlgUIFrame(QWidget, Ui_Form):
