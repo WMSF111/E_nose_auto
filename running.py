@@ -1,3 +1,9 @@
+"""桌面程序主入口。
+
+这个文件负责创建主窗口，组装各个一级页面，并处理串口设置、图形显示、
+算法页面和 Web 页面之间的导航切换。
+"""
+
 import global_var
 import os
 import sys
@@ -8,7 +14,7 @@ from resource_ui.modules import *
 from resource_ui.web_app import run
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 import resource_ui.UI_show.serial_show as se
-from resource_ui.UI_show.Gragn_show_ui import GraphShowWindow
+from resource_ui.UI_show.graph_show_window_refactor import GraphShowWindow
 from resource_ui.UI_show.alg.form.AlgUi import AlgUIFrame # 第三版界面
 
 # 高DPI支持 - 确保在高分辨率显示器上正确显示
@@ -22,6 +28,7 @@ APP_DESCRIPTION = "智能电子鼻实验及算法平台"  # 应用程序描述
 class MainWindow(QMainWindow):
     """主窗口类，负责应用程序的UI和功能管理"""
 
+    # 初始化主窗口并完成页面装配。
     def __init__(self):
         """初始化主窗口"""
         super().__init__()
@@ -33,6 +40,7 @@ class MainWindow(QMainWindow):
         self.showMaximized() #.showNormal()  # 可以切换为 showMaximized() 以全屏显示
         self._set_initial_page()
 
+    # 初始化主界面 UI 组件。
     def _init_ui(self):
         """初始化UI组件"""
         self.ui = Ui_MainWindow()
@@ -42,6 +50,7 @@ class MainWindow(QMainWindow):
         global WIDGETS
         WIDGETS = self.ui
 
+    # 设置主窗口标题和基础属性。
     def _setup_window(self):
         """设置窗口基本属性"""
         # 设置窗口标题
@@ -52,6 +61,7 @@ class MainWindow(QMainWindow):
         # 启用自定义标题栏（Mac/Linux可能需要设为False）
         Settings.ENABLE_CUSTOM_TITLE_BAR = True
 
+    # 初始化各个功能页面模块。
     def _init_modules(self):
         """初始化所有功能模块"""
         # 串口设置
@@ -69,6 +79,7 @@ class MainWindow(QMainWindow):
         # Flask线程变量，用于启动Web应用
         self.flask_thread = None
 
+    # 连接导航按钮和内部信号。
     def _connect_signals(self):
         """连接所有信号和槽函数"""
         WIDGETS.toggleButton.clicked.connect(
@@ -80,6 +91,7 @@ class MainWindow(QMainWindow):
         WIDGETS.btn_alg.clicked.connect(self._on_button_click)  # 算法页面
         WIDGETS.btn_ai.clicked.connect(self._on_button_click)  # AI/Web页面
 
+    # 应用全局主题样式。
     def _apply_theme(self):
         """应用主题样式到应用程序"""
         use_custom_theme = True
@@ -89,11 +101,13 @@ class MainWindow(QMainWindow):
             UIFunctions.theme(self, theme_file, True)
             AppFunctions.setThemeHack(self)
 
+    # 设置应用启动后的默认页面。
     def _set_initial_page(self):
         """设置应用程序启动时的默认页面"""
         WIDGETS.stackedWidget.setCurrentWidget(self.serial_init)
         WIDGETS.btn_serial.setStyleSheet(UIFunctions.selectMenu(WIDGETS.btn_serial.styleSheet()))
 
+    # 根据按钮类型分发点击事件。
     def _on_button_click(self):
         """处理所有按钮的点击事件"""
         button = self.sender()
@@ -111,6 +125,7 @@ class MainWindow(QMainWindow):
             handler(button)
 
     # 串口设置按钮的调用函数
+    # 切换到串口配置页面。
     def _handle_serial_button(self, button):
         if self.test_show.ser:
             self.test_show.SerStop()
@@ -121,6 +136,7 @@ class MainWindow(QMainWindow):
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
     # 开始实验按钮的调用函数
+    # 切换到图形测试页面。
     def _handle_test_button(self, button):
         """处理测试按钮点击 - 切换到图表显示页面"""
         self._stop_serial_connection()
@@ -132,6 +148,7 @@ class MainWindow(QMainWindow):
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
     # 算法选择按钮的调用函数
+    # 切换到算法页面。
     def _handle_algorithm_button(self, button):
         if self.test_show.ser:
             self.test_show.SerStop()
@@ -141,6 +158,7 @@ class MainWindow(QMainWindow):
         button.setStyleSheet(UIFunctions.selectMenu(button.styleSheet()))
 
     # 大模型按钮的调用函数
+    # 启动并打开 Web 页面。
     def _handle_webapp_button(self, button):
         """处理Web应用按钮点击 - 启动Flask Web服务器"""
         try:
@@ -152,15 +170,16 @@ class MainWindow(QMainWindow):
         except Exception:
             self._show_error_message("无法打开链接:")
 
+    # 停止当前串口连接并释放资源。
     def _stop_serial_connection(self):
         """停止串口连接，确保资源正确释放"""
         try:
-            if global_var.Port_select == "":
+            if global_var.app_state.serial.primary_port == "":
                 self._show_error_message("请先选择串口")
             elif self.serial_init.ser:
                 if self.serial_init.ser.read_flag:  # 打开状态则关闭串口
                     self.serial_init.ser.stop()  # 关闭串口
-                    if global_var.Auto_falg == True:
+                    if global_var.app_state.auto_mode == True:
                         self.serial_init.ser1.stop()  # 关闭串口
                     se.ms._setButtonText.emit("断开状态")
                     self.serial_init.ser_open_look_ui(True)
@@ -168,6 +187,7 @@ class MainWindow(QMainWindow):
             self._show_error_message("请先选择串口")
 
 
+    # 弹出通用错误提示框。
     def _show_error_message(self, text):
         """显示错误消息对话框"""
         message_box = QMessageBox()
@@ -177,16 +197,19 @@ class MainWindow(QMainWindow):
         message_box.setStandardButtons(QMessageBox.StandardButton.Ok)
         message_box.exec()
 
+    # 处理窗口尺寸变化事件。
     def resizeEvent(self, event):
         """窗口大小调整事件处理"""
         super().resizeEvent(event)
         UIFunctions.resize_grips(self)
 
+    # 记录窗口拖动时的鼠标位置。
     def mousePressEvent(self, event):
         """鼠标按下事件处理"""
         super().mousePressEvent(event)
         self.dragPos = event.globalPos()
 
+    # 处理窗口关闭时的清理流程。
     def closeEvent(self, event):
         """窗口关闭事件处理"""
         print("关闭事件")
@@ -194,6 +217,7 @@ class MainWindow(QMainWindow):
         self._graceful_shutdown()
         event.accept()
 
+    # 依次关闭各功能模块。
     def _close_modules(self, event):
         """关闭所有功能模块，确保资源正确释放"""
         modules_to_close = [
@@ -214,6 +238,7 @@ class MainWindow(QMainWindow):
                 except Exception as e:
                     print(f"关闭模块时出错: {e}")
 
+    # 执行应用退出前的收尾逻辑。
     def _graceful_shutdown(self):
         """关闭应用程序，先尝试正常关闭，失败则强制结束"""
         try:
@@ -232,6 +257,7 @@ class MainWindow(QMainWindow):
             os.kill(pid, signal.SIGTERM)
 
 
+# 创建应用对象并启动主窗口。
 def main():
     """应用程序主函数"""
     app = QApplication(sys.argv)
@@ -257,8 +283,8 @@ def main():
     # 步骤3：全局应用浅色调色板
     app.setPalette(light_palette)
 
-    # 步骤4：强制设置color-scheme为light（Qt 5.15+支持，强化浅色优先级）
-    app.setStyleSheet("QApplication { color-scheme: light; }")
+    # 步骤4：补充浅色偏好，但不要覆盖前面已经加载的全局主题样式。
+    app.setStyleSheet(f"{app.styleSheet()}\nQApplication {{ color-scheme: light; }}")
     icon_path = os.path.join(os.path.dirname(__file__), "icon.ico")
     if os.path.exists(icon_path):
         app.setWindowIcon(QIcon(icon_path))

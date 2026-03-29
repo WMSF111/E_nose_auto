@@ -18,7 +18,7 @@ class SerialSetting_Init(QMainWindow):
         self.layout = QVBoxLayout(self.central_widget)
         # 创建一个按钮用于添加标签
         self.already_button = QPushButton("确定传感器", self.central_widget)
-        self.already_button.clicked.connect(self.update_sensors)
+        self.already_button.clicked.connect(self.update_sensor_names)
         self.layout.addWidget(self.already_button)
 
         # 创建一个垂直布局
@@ -53,7 +53,7 @@ class SerialSetting_Init(QMainWindow):
 
         # 将默认传感器名称添加到 self.sensors_Item
         self.sensors_Item = []
-        for sensor_name in glo_var.sensors:
+        for sensor_name in glo_var.app_state.sensor_names:
             self.add_label(sensor_name)
 
     def add_label(self, text=None):
@@ -98,7 +98,7 @@ class SerialSetting_Init(QMainWindow):
             # 更新所有标签的序号
             self.update_label_indices()
             # if flag == 1:
-            #     self.update_sensors()
+            #     self.update_sensor_names()
 
 
     def delete_label(self, label_to_delete):
@@ -122,12 +122,13 @@ class SerialSetting_Init(QMainWindow):
             index_label.setText(str(index + 1) + ".")
 
 
-    def update_sensors(self):
-        glo_var.sensors.clear()
+    def update_sensor_names(self):
+        sensor_names = []
         # 更新所有标签的序号
         for index, (index_label, new_label, _) in enumerate(self.sensors_Item):
-            glo_var.sensors.append(new_label.text())
-        print(glo_var.sensors)
+            sensor_names.append(new_label.text())
+        glo_var.app_state.update_sensor_names(sensor_names)
+        print(glo_var.app_state.sensor_names)
 
 
 # if __name__ == "__main__":

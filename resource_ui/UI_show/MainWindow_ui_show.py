@@ -5,12 +5,13 @@ from PySide6.QtWidgets import QMainWindow, QMessageBox
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from resource_ui.ui_pfile.MianWindow import Ui_MainWindow
-from resource_ui.UI_show.Gragn_show_ui import GraphShowWindow
+from resource_ui.UI_show.graph_show_window_refactor import GraphShowWindow
 from resource_ui.UI_show.Alg_ui_show import AlgShow_Init
 
 The_url = "https://www.baidu.com" #要跳转的网页
 
 class MianWindow_Init(QMainWindow, Ui_MainWindow):
+    # 初始化旧版主窗口界面。
     def __init__(self):
         super(MianWindow_Init, self).__init__()
         # 使用ui文件导入定义界面类
@@ -18,10 +19,12 @@ class MianWindow_Init(QMainWindow, Ui_MainWindow):
         self.InitMS()
 
 
+    # 连接树形菜单的点击信号。
     def InitMS(self):
         self.treeWidget.itemClicked.connect(self.on_tree_item_clicked)
 
 
+    # 根据树形菜单点击切换页面。
     def on_tree_item_clicked(self, item, column):
         if item.text(column) == "准备阶段":
             self.clear_layout()
@@ -46,6 +49,7 @@ class MianWindow_Init(QMainWindow, Ui_MainWindow):
             if not QDesktopServices.openUrl(url):
                 self.show_error_message()
 
+    # 显示打开链接失败的错误提示。
     def show_error_message(self):
         # 创建一个QMessageBox实例
         msg = QMessageBox()
@@ -64,6 +68,7 @@ class MianWindow_Init(QMainWindow, Ui_MainWindow):
         # 显示消息框
         msg.exec()
 
+    # 清空主展示区域中的所有控件。
     def clear_layout(self):
         # 清除布局中的所有内容
         while self.show_Layout.count():
@@ -74,6 +79,7 @@ class MianWindow_Init(QMainWindow, Ui_MainWindow):
                 self.clear_layout_recursive(item.layout())  # 递归清除子布局
                 item.layout().deleteLater()  # 删除子布局
 
+    # 递归清空嵌套布局中的所有内容。
     def clear_layout_recursive(self, layout):
         # 递归清除布局中的所有内容
         while layout.count():
@@ -84,6 +90,7 @@ class MianWindow_Init(QMainWindow, Ui_MainWindow):
                 self.clear_layout_recursive(item.layout())  # 递归清除子布局
                 item.layout().deleteLater()  # 删除子布局
 
+    # 关闭窗口前释放子页面资源。
     def closeEvent(self, event):
         if hasattr(self, 'serial_settings_window'): # 检测是否存在 self.serial_settings_window
             self.serial_settings_window.closeEvent(event)

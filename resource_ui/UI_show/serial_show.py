@@ -8,7 +8,7 @@ from PySide6.QtCore import QObject, Signal
 from PySide6.QtWidgets import QWidget, QFileDialog, QApplication
 from PySide6.QtGui import QIcon, QTextCursor
 import tool.serial_thread as mythread
-if g_var.Auto_falg == True:
+if g_var.app_state.auto_mode == True:
     from resource_ui.ui_pfile.Serial import Ui_Serial
 else:
     from resource_ui.ui_pfile.Serial_1 import Ui_Serial
@@ -35,13 +35,13 @@ class Action():
     def _serialComboBoxResetItems(self, texts: list):
         self.ui.serialComboBox.clear()
         self.ui.serialComboBox.addItems(texts)
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             self.ui.serialComboBox2.clear()
             self.ui.serialComboBox2.addItems(texts)
 
     def _serialComboBoxclear(self):
         self.ui.serialComboBox.clear()
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             self.ui.serialComboBox2.clear()
 
     def _setButtonText(self, text: str):
@@ -106,7 +106,7 @@ class Serial_Init(QWidget):
         self.ui.serialComboBox.currentTextChanged.connect(
             lambda: self.initComboBox(self.ui.serialComboBox, self.ui.statues)
         )
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             self.ui.serialComboBox2.setEnabled(False)
             self.ui.serialComboBox2.currentTextChanged.connect(
                 lambda: self.initComboBox(self.ui.serialComboBox2, self.ui.statues_3)
@@ -119,15 +119,15 @@ class Serial_Init(QWidget):
         ports, self.Com_Dict = mythread.getPortList()  # 获取串口列表
         if self.ports != ports:  # 如果串口不是所选的
             self.ports = ports
-            if g_var.Port_select not in [i.name for i in self.ports]:
+            if g_var.app_state.primary_port not in [i.name for i in self.ports]:
                 self.ser.read_flag = False
-                print([i.name for i in self.ports], g_var.Port_select)
+                print([i.name for i in self.ports], g_var.app_state.primary_port)
                 print("初始化列表失败")
             ms._serialComboBoxResetItems.emit([i.name for i in self.ports])  # 添加所有串口
 
     def initallSerial(self):
         self.ui.serialComboBox.setEnabled(True)
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             self.ui.serialComboBox2.setEnabled(True)
             sconfig = [" ", 115200, " ", 9600]
             self.smng = mythread.SerialsMng(sconfig)
@@ -145,22 +145,23 @@ class Serial_Init(QWidget):
         print("read_flag:", str(self.ser.read_flag))
         if self.ser.read_flag: # 打开状态则关闭串口
             self.ser.stop()  # 关闭串口
-            if g_var.Auto_falg == True:
+            if g_var.app_state.auto_mode == True:
                 self.ser1.stop()  # 关闭串口
             ms._setButtonText.emit("断开状态")
             self.ser_open_look_ui(True)
         else: # 关闭状态则连接串口
             # 先重设串口设置
-            g_var.Port_select = self.ui.serialComboBox.currentText()  # 串口选择
-            self.ser.setSer(g_var.Port_select, g_var.Bund_select)  # 设置串口及波特率 重设
-            if g_var.Auto_falg == True:
-                g_var.Port_select2 = self.ui.serialComboBox2.currentText()  # 串口选择
-                self.ser1.setSer(g_var.Port_select2, g_var.Bund_select2)  # 设置串口及波特率 重设
+            primary_port = self.ui.serialComboBox.currentText()
+            secondary_port = self.ui.serialComboBox2.currentText() if g_var.app_state.auto_mode else ""
+            g_var.app_state.set_serial_ports(primary_port, secondary_port)
+            self.ser.setSer(g_var.app_state.primary_port, g_var.app_state.primary_baud)
+            if g_var.app_state.auto_mode == True:
+                self.ser1.setSer(g_var.app_state.secondary_port, g_var.app_state.secondary_baud)
             #再打开串口
             d = self.ser.open(ms.print.emit, slip=b'\\n\\r')  # 打开串口，成功返回0，失败返回1， + str信息
             print(d)
             ms.print.emit(d[1])
-            if g_var.Auto_falg == True:
+            if g_var.app_state.auto_mode == True:
                 d = self.ser1.open(ms.print.emit, flag = 1)
                 print(d)
                 ms.print.emit(d[1])
@@ -174,7 +175,7 @@ class Serial_Init(QWidget):
         if not (text == "") or not (text is None):
             if self.ser.read_flag:
                 if text[0:2] == "55":
-                    if g_var.Auto_falg == True:
+                    if g_var.app_state.auto_mode == True:
                         self.ser1.write(text)
                         ms.print.emit(text + '\n')
                 else:
@@ -211,7 +212,7 @@ class Serial_Init(QWidget):
 
     def ser_open_look_ui(self, status): #禁止读取列表
         self.ui.serialComboBox.setEnabled(status)
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             self.ui.serialComboBox2.setEnabled(status)
 
     def closeEvent(self, event = None):
@@ -219,7 +220,7 @@ class Serial_Init(QWidget):
         # 1. 停止串口线程
         if hasattr(self, 'ser') and self.ser.read_flag:
             self.ser.stop()
-        if g_var.Auto_falg == True:
+        if g_var.app_state.auto_mode == True:
             if hasattr(self, 'ser1') and self.ser1.read_flag:
                 self.ser1.stop()
         if event != None:

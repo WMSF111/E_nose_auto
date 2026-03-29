@@ -82,7 +82,7 @@ class time_thread(): # 时间相关的线程
             print("恢复时间线程")
 
     def stop(self, name = None):
-        glo_var.now_temp = 0
+        glo_var.app_state.update_current_temp(0)
         self._running = False  # 设置读取标志为 False
         self.time = 0
         self._stop_evt.set()  # 通过事件通知线程停止
@@ -91,14 +91,6 @@ class time_thread(): # 时间相关的线程
         else:
             print("线程已结束")
 
-channal = [0, 4,3,2,1,5,6,7,8]
-posxyz = [
-    [0,0,0],
-    [944, 3184, 1548],
-    [1536, 3184, 1548],
-    [960, 18943, 1548],
-    [1728, 19455, 1548],
-]
 class Serial1opea():
     # 一系列串口控制硬件的操作
     def __init__(self, ms, ser, ser1 = None):
@@ -108,6 +100,52 @@ class Serial1opea():
         # self.time_th = None
         self._running =  True
 
+    # 判断当前是否处于演示模式。
+    def _is_demo_mode(self):
+        return glo_var.app_state.demo_mode
+
+    # 获取演示模式下单步等待时间。
+    def _demo_seconds(self):
+        return glo_var.app_state.demo_step_seconds
+
+    # 根据流程类型获取演示模式下的等待时间。
+    def _demo_duration(self, phase):
+        phase_duration_map = {
+            "base_clear": glo_var.app_state.base_time_value,
+            "sample_collect": glo_var.app_state.sample_time_value,
+            "room_clear": glo_var.app_state.exhaust_time_value,
+            "heat_up": 0,
+            "control": 0,
+        }
+        configured_seconds = phase_duration_map.get(phase, 0)
+        return max(1, int(configured_seconds or self._demo_seconds()))
+
+    # 在演示模式下等待固定时间后继续。
+    def _demo_wait(self, status_text, phase="control", value=None, draw_open=False, draw_close=False):
+        self.ms._statues_label.emit(status_text)
+        if draw_open:
+            self.ms._draw_open.emit()
+        if draw_close:
+            self.ms._draw_close.emit()
+        wait_seconds = self._demo_duration(phase)
+        for _ in range(wait_seconds):
+            if self._running == False:
+                return False
+            time.sleep(1)
+        if value is not None:
+            self.ms._print.emit(value)
+        return True
+
+    # 向主串口发送指令。
+    def _write_main(self, text):
+        if self.ser and hasattr(self.ser, "write"):
+            self.ser.write(text)
+
+    # 向副串口发送指令。
+    def _send_aux(self, *args, **kwargs):
+        if self.ser1 and hasattr(self.ser1, "serialSend"):
+            self.ser1.serialSend(*args, **kwargs)
+
     def GetSigal1(self, text): # ser1获取信号
         parts = text.split()  # ['55','AA', ...]
         Frame = frame_data.FrameData()
@@ -116,18 +154,30 @@ class Serial1opea():
         if (Frame.buf[2] == '02'): # 获取温度
             num = int.from_bytes(bytes.fromhex(Frame.buf[4] + Frame.buf[5]), byteorder='big')  # 1000
             text = num / 10.0
-            glo_var.now_temp = text # 更新现在的温度
+            glo_var.app_state.update_current_temp(text) # 更新现在的温度
 
     def loop_to_target_temp(self, the_time = 0): # 每1s读取一次温度，直到达到合适温度glo_var.target_temp
+        if self._is_demo_mode():
+            target_temp = glo_var.app_state.target_temp or 25
+            wait_seconds = self._demo_duration("heat_up")
+            for second in range(1, wait_seconds + 1):
+                if self._running == False:
+                    return
+                current_temp = target_temp * second / wait_seconds
+                glo_var.app_state.update_current_temp(current_temp)
+                self.ms._Currtem_spinBox.emit(glo_var.app_state.current_temp)
+                time.sleep(1)
+            self.ms._attendtime_spinBox.emit(wait_seconds)
+            return
         while True:  # 没到回复
             if self._running == False:
                 break
             # 线程安全：把值读出来再比较
-            print("现在温度是：", glo_var.now_temp)
-            self.ms._Currtem_spinBox.emit(glo_var.now_temp)
-            self.ser1.serialSend(2, glo_var.channal[1])
+            print("现在温度是：", glo_var.app_state.current_temp)
+            self.ms._Currtem_spinBox.emit(glo_var.app_state.current_temp)
+            self.ser1.serialSend(2, glo_var.app_state.channels[1])
             the_time += 1
-            if glo_var.target_temp <= glo_var.now_temp:  # 当目标温度达成
+            if glo_var.app_state.target_temp <= glo_var.app_state.current_temp:  # 当目标温度达成
                 print("达到目标温度需要时间：",the_time)
                 self.ms._attendtime_spinBox.emit(the_time)
                 break
@@ -137,7 +187,8 @@ class Serial1opea():
         self.base_clear()
         self.loop_to_target_temp()# 循环到达指定温度
         self.now_Sam = 1
-        while self.now_Sam <= glo_var.target_Sam and self._running == True:  # target_Sam个样品循环操作
+        while self.now_Sam <= glo_var.app_state.target_sample_count and self._running == True:  # target_Sam个样品循环操作
+            glo_var.app_state.current_sample_index = self.now_Sam
             print("开始操作:self.now_Sam", self.now_Sam)
             time.sleep(4)
 
@@ -168,12 +219,19 @@ class Serial1opea():
     def base_clear(self):
         if self._running == True:
             self.ms._Clear_Button.emit(False)  # 不允许继续
+        if self._is_demo_mode():
+            wait_seconds = self._demo_duration("base_clear")
+            if self._demo_wait("开始进行基线处理", phase="base_clear"):
+                self.ms._statues_label.emit("基线处理完成")
+                self.ms._print.emit(wait_seconds)
+            self.ms._Clear_Button.emit(True)
+            return
         text = ("11\n\r")
         num = 0
         while True:  # 没到回复
             if self._running == False:
                 break
-            self.ser.write(text)  # 开始采集信号
+            self._write_main(text)  # 开始采集信号
             time.sleep(2)
             num += 1
             if self.ser.sameSignal == True:
@@ -195,7 +253,7 @@ class Serial1opea():
                 print("基线处理完成")
                 self.ms._print.emit(num)
                 break
-            if num >= glo_var.base_time + 5:
+            if num >= glo_var.app_state.base_time_value + 5:
                 self.ms._show_error_message.emit(str("基线处理时长超时", num, ", 请重新操作"))
                 self.stop()
                 break
@@ -208,12 +266,18 @@ class Serial1opea():
         text = ("21\n\r")
         num = 0
         self.ms._ClearDraw.emit()  # 清除绘图界面
-        if glo_var.Auto_falg == True:
-            self.ser_opea(3, glo_var.sample_time, re="55 AA 03 00 01 00 00 00 00 0A") # 信号采集
+        if self._is_demo_mode():
+            if self._demo_wait("样品开始采集", phase="sample_collect", draw_open=True):
+                self.ms._statues_label.emit("采样处理完成")
+                self.ms._draw_close.emit()
+            self.ms._Collectbegin_Button.emit(True)
+            return
+        if glo_var.app_state.auto_mode == True:
+            self.ser_opea(3, glo_var.app_state.sample_time_value, re="55 AA 03 00 01 00 00 00 00 0A") # 信号采集
         while True:  # 没到回复
             if self._running == False:
                 break
-            self.ser.write(text)  # 开始采集信号
+            self._write_main(text)  # 开始采集信号
             time.sleep(2)
             num += 1
             if self.ser.sameSignal == True:
@@ -236,10 +300,10 @@ class Serial1opea():
                 self.ms._statues_label.emit("采样处理完成")
                 self.ms._draw_close.emit()
                 break
-            if num >= glo_var.sample_time + 5:
+            if num >= glo_var.app_state.sample_time_value + 5:
                 self.ms._statues_label.emit("采样时长超时")
                 self.ms._draw_close.emit()
-                self.ms._show_error_message.emit(f"采样时长超时{glo_var.sample_time + 5}, 请重新操作")
+                self.ms._show_error_message.emit(f"采样时长超时{glo_var.app_state.sample_time_value + 5}, 请重新操作")
                 self.stop()
                 break
         self.ms._Collectbegin_Button.emit(True)
@@ -250,12 +314,22 @@ class Serial1opea():
             self.ms._Clearroom_Button.emit(False)
         text = ("31\n\r")
         num = 0
-        if glo_var.Auto_falg == True:
-            self.ser_opea(4, glo_var.exhaust_time)
+        if self._is_demo_mode():
+            room_clear_seconds = self._demo_duration("room_clear")
+            if self._demo_wait(
+                "气室正在清洗",
+                phase="room_clear",
+                value=glo_var.app_state.sample_time_value + room_clear_seconds,
+            ):
+                self.ms._statues_label.emit("洗气处理完成")
+            self.ms._Clearroom_Button.emit(True)
+            return
+        if glo_var.app_state.auto_mode == True:
+            self.ser_opea(4, glo_var.app_state.exhaust_time_value)
         while True:  # 没到回复
             if self._running == False:
                 break
-            self.ser.write(text)  # 开始采集信号
+            self._write_main(text)  # 开始采集信号
             time.sleep(2)
             num += 1
             if self.ser.sameSignal == True:
@@ -274,9 +348,9 @@ class Serial1opea():
             num += 1
             if self.ser.getSignal == "32":
                 self.ms._statues_label.emit("洗气处理完成")
-                self.ms._print.emit(glo_var.sample_time + num)
+                self.ms._print.emit(glo_var.app_state.sample_time_value + num)
                 break
-            if num >= glo_var.exhaust_time + 5:
+            if num >= glo_var.app_state.exhaust_time_value + 5:
                 self.ms._statues_label.emit("洗气时长超时")
                 self.ms._Clearroom_Button.emit(True)
                 self.ms._show_error_message.emit(str("洗气时长超时：", num, ", 请重新操作"))
@@ -297,33 +371,36 @@ class Serial1opea():
             print("线程已结束")
 
     def pos_top(self):
-        if(self.now_Sam != glo_var.target_Sam):
+        if(self.now_Sam != glo_var.app_state.target_sample_count):
             print("转移位置到下一个样品" + str(self.now_Sam + 1))
-            self.ser_opea("0A", posxyz[self.now_Sam + 1][0], posxyz[self.now_Sam + 1][1],
-                                (int)(posxyz[self.now_Sam + 1][2] * 0.1), target = 10)
+            self.ser_opea("0A", glo_var.app_state.positions[self.now_Sam + 1][0], glo_var.app_state.positions[self.now_Sam + 1][1],
+                                (int)(glo_var.app_state.positions[self.now_Sam + 1][2] * 0.1), target = 10)
         else:
             self.Stra()
             self.ms._Collectbegin_Button.emit(True)
 
     def pos_top_before(self):
         print("拔出样品" + str(self.now_Sam))
-        self.ser_opea("0A", posxyz[self.now_Sam][0], posxyz[self.now_Sam][1],
-                                (int)(posxyz[self.now_Sam][2] * 0.1), target = 10)
+        self.ser_opea("0A", glo_var.app_state.positions[self.now_Sam][0], glo_var.app_state.positions[self.now_Sam][1],
+                                (int)(glo_var.app_state.positions[self.now_Sam][2] * 0.1), target = 10)
 
     def pos_down(self):
-        self.ser_opea("0A", posxyz[self.now_Sam][0], posxyz[self.now_Sam][1],
-                                (int)(posxyz[self.now_Sam][2]), target = 20)
+        self.ser_opea("0A", glo_var.app_state.positions[self.now_Sam][0], glo_var.app_state.positions[self.now_Sam][1],
+                                (int)(glo_var.app_state.positions[self.now_Sam][2]), target = 20)
         print("插入样品" + str(self.now_Sam))
 
     def Stra(self): # 运动轴回到原点
         self.ser_opea('0C')
 
     def ser_opea(self, opea, opea1 = 0, opea2 = 0, opea3 = 0, re = None, target = 5, statues_label = "处理完成"): # ser与ser1发送信号
+        if self._is_demo_mode():
+            self._demo_wait(statues_label, phase="control")
+            return
         num = 0
         while True:  # ser1串口输入
             if self._running == False:
                 break
-            self.ser1.serialSend(opea, opea1, opea2, opea3, re = re)
+            self._send_aux(opea, opea1, opea2, opea3, re = re)
             time.sleep(1)
             if self.ser1.sameSignal == True:
                 self.ms._statues_label.emit(statues_label)
@@ -331,7 +408,7 @@ class Serial1opea():
             num += 1
             if num >= target:
                 self.ms._statues_label.emit("控制串口掉线")
-                self.ms._print.emit(glo_var.sample_time + num)
+                self.ms._print.emit(glo_var.app_state.sample_time_value + num)
                 print("控制串口掉线")
                 self.ms._show_error_message.emit("控制串口掉线, 请重新操作")
                 break

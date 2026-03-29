@@ -122,7 +122,7 @@ class Gragh_show_Init(QWidget, Ui_Gragh_show):
         if self.ser.read_flag: # 如果串口存在
             self.ser.stop() # 关闭串口
         else:
-            self.ser.setSer(g_var.Port_select, g_var.Bund_select) # 设置串口及波特率
+            self.ser.setSer(g_var.app_state.primary_port, g_var.app_state.primary_baud) # 设置串口及波特率
             d = self.ser.open(ms.Draw.emit) # 打开串口，成功返回0，失败返回1， + str信息
             ms.Draw.emit(d[1])
 

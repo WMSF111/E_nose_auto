@@ -65,17 +65,17 @@ class UI_TXT_TO():
                         header = rows_list[0][:] #第一行就是头
                     else:
                         header = rows_list[0][1:] #第一行从第二个开始就是头
-                    global_var.sensors = header.copy()
+                    global_var.app_state.update_sensor_names(header.copy())
 
             elif file_extension == '.csv':
                 df = pd.read_csv(first_file)
                 header = df.columns[1:].tolist()
-                global_var.sensors = header.copy()
+                global_var.app_state.update_sensor_names(header.copy())
 
             elif file_extension == '.xlsx':
                 df = pd.read_excel(first_file)
                 header = df.columns[1:].tolist()
-                global_var.sensors = header.copy()
+                global_var.app_state.update_sensor_names(header.copy())
 
             else:
                 raise ValueError(f"Unsupported file type: {file_extension}")
@@ -117,21 +117,21 @@ class UI_TXT_TO():
                     else:
                         file_data.append(converted_data)
 
-                df_txt = pd.DataFrame(file_data, columns=['Target'] + global_var.sensors)
+                df_txt = pd.DataFrame(file_data, columns=['Target'] + global_var.app_state.sensor_names)
                 combined_df = pd.concat([combined_df, df_txt], ignore_index=True)
 
         elif file_extension == '.csv':
             df_csv = pd.read_csv(file_path)
             if all_flag == True:
                 df_csv['Target'] = file_name
-                df_csv = df_csv[['Target'] + global_var.sensors]  # Reorder columns
+                df_csv = df_csv[['Target'] + global_var.app_state.sensor_names]  # Reorder columns
             combined_df = pd.concat([combined_df, df_csv], ignore_index=True)
 
         elif file_extension == '.xlsx':
             df_xlsx = pd.read_excel(file_path)
             if all_flag == True:
                 df_xlsx['Target'] = file_name
-                df_xlsx = df_xlsx[['Target'] + global_var.sensors]  # Reorder columns
+                df_xlsx = df_xlsx[['Target'] + global_var.app_state.sensor_names]  # Reorder columns
             combined_df = pd.concat([combined_df, df_xlsx], ignore_index=True)
         return combined_df
 
@@ -143,7 +143,7 @@ class UI_TXT_TO():
             first_file = path_folder[0]  # 获取第一个文件
             UI_TXT_TO.read_file_header(first_file, all_flag=True)
 
-            print("global_var.sensors:", global_var.sensors)
+            print("global_var.app_state.sensor_names:", global_var.app_state.sensor_names)
 
             # 遍历所有文件，读取并合并到 DataFrame
             for file_path in path_folder:
@@ -162,7 +162,7 @@ class UI_TXT_TO():
         combined_df = pd.DataFrame()
         try:
             UI_TXT_TO.read_file_header(script_dir, all_flag = False) # 获取传感器名称, 从第二列开始
-            print("global_var.sensors:", global_var.sensors)
+            print("global_var.app_state.sensor_names:", global_var.app_state.sensor_names)
             try:
                 combined_df = UI_TXT_TO.read_file_to_dataframe(script_dir, combined_df, all_flag=False)
             except Exception as e:

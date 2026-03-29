@@ -285,6 +285,11 @@ QLineEdit:hover {
 QLineEdit:focus {
 	border: 2px solid #215b5d;
 }
+QLineEdit:disabled {
+	background-color: #c7c7c7;
+	border: 1px solid #b5b5b5;
+	color: #666666;
+}
 
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
 PlainTextEdit */
@@ -468,12 +473,11 @@ QComboBox QAbstractItemView {
 
 
 QComboBox:disabled {
-    background-color: #ecf8f8;
-    border: 1px solid #ecf8f8;
-    border: 1px solid #3ba4a7;
+    background-color: #c7c7c7;
+    border: 1px solid #b5b5b5;
 	padding: 3px;
 	padding-left: 10px;
-    color: #202c2c;
+    color: #666666;
 }
 
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -519,6 +523,16 @@ QSpinBox::up-button:pressed,
 QSpinBox::down-button:pressed {
     background-color: #3ba4a7;
     border: 1px solid #215b5d;
+}
+QSpinBox:disabled {
+    background-color: #c7c7c7;
+    border: 1px solid #b5b5b5;
+    color: #666666;
+}
+QSpinBox::up-button:disabled,
+QSpinBox::down-button:disabled {
+    background-color: #c7c7c7;
+    border: 1px solid #b5b5b5;
 }
 
 QSpinBox QAbstractItemView {
@@ -609,6 +623,12 @@ Button */
     transform: translateY(2px);
 }
 
+#pagesContainer QPushButton:disabled {
+    background-color: #c7c7c7;
+    color: #666666;
+    border: 1px solid #b5b5b5;
+}
+
 /* /////////////////////////////////////////////////////////////////////////////////////////////////
 QDialog */
 
@@ -654,6 +674,11 @@ QPushButton:pressed {
     border: 2px solid #215b5d;
     transform: translateY(2px);
 }
+QPushButton:disabled {
+    background-color: #c7c7c7;
+    color: #666666;
+    border: 1px solid #b5b5b5;
+}
 
 
 QDoubleSpinBox {
@@ -697,6 +722,16 @@ QDoubleSpinBox::up-button:pressed,
 QDoubleSpinBox::down-button:pressed {
     background-color: #3ba4a7;
     border: 1px solid #215b5d;
+}
+QDoubleSpinBox:disabled {
+    background-color: #c7c7c7;
+    border: 1px solid #b5b5b5;
+    color: #666666;
+}
+QDoubleSpinBox::up-button:disabled,
+QDoubleSpinBox::down-button:disabled {
+    background-color: #c7c7c7;
+    border: 1px solid #b5b5b5;
 }
 
 QDoubleSpinBox QAbstractItemView {
