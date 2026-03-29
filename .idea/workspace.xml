@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.env" beforeDir="false" afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/alg_puifile/pic_tab_add.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/alg_puifile/pic_tab_add.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/ui_file/ChooseAndShow_1.ui" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/ui_file/ChooseAndShow_1.ui" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resource_ui/ui_pfile/ChooseAndShow_1.py" beforeDir="false" afterPath="$PROJECT_DIR$/resource_ui/ui_pfile/ChooseAndShow_1.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tool/UI_show/Gragn_show_ui.py" beforeDir="false" afterPath="$PROJECT_DIR$/tool/UI_show/Gragn_show_ui.py" afterDir="false" />
-    </list>
+    <list default="true" id="c15996b2-8d73-4f32-9fdf-8c286eb858bf" name="更改" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -47,8 +40,8 @@
     "Python.running.executor": "Run",
     "Python.ui_Alg_Frame_New.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "E:/study/Python/PyCharm_study/auto_Enose(2)"
+    "git-widget-placeholder": "AI修改代码",
+    "last_opened_file_path": "E:/study/Python/PyCharm_study/Work"
   }
 }]]></component>
   <component name="RecentsManager">
